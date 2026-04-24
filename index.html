@@ -22,6 +22,46 @@
       <div class="row justify-content-md-center mt-5">
         <div class="col-md-12">
           <h1>Grade Calculator</h1>
+          <div class="card mb-4">
+            <div class="card-body">
+              <h2 class="h5 mb-3">Grading Period</h2>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select class="form-select" id="gradingPeriodSelect">
+                      <option value="prelim" selected>Prelim</option>
+                      <option value="midterm">Midterm</option>
+                      <option value="final">Final</option>
+                    </select>
+                    <label for="gradingPeriodSelect">Calculate For</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select class="form-select" id="roundingModeSelect">
+                      <option value="round" selected>Round (2 decimals)</option>
+                      <option value="truncate">Truncate (2 decimals)</option>
+                    </select>
+                    <label for="roundingModeSelect">Dashboard Mode</label>
+                  </div>
+                </div>
+                <div class="col-md-6 d-none" id="previousGradeWrap">
+                  <div class="form-floating">
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="previousGradeInput"
+                      placeholder="0"
+                    />
+                    <label for="previousGradeInput" id="previousGradeLabel"
+                      >Prelim Grade</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-body">
               <div id="formsContainer">

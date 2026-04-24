@@ -26,21 +26,37 @@ const addForm = (isQuiz = false) => {
   const type = isQuiz ? "quiz" : "assessment";
   const container = $(isQuiz ? "quizFormsContainer" : "formsContainer");
   const html = `
-    <div class="${type}-row row g-3 mb-3">
+    <div class="${type}-row row g-3 mb-3 position-relative">
       <div class="col-md-6">
         <div class="form-floating">
           <input type="number" class="form-control ${type}-score" id="${type}ScoreInput${c}" placeholder="0"/>
           <label for="${type}ScoreInput${c}">${isQuiz ? "Score" : "Assessment Task Score"}</label>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="form-floating">
+      <div class="col-md-6 d-flex align-items-center gap-2">
+        <div class="form-floating flex-grow-1">
           <input type="number" class="form-control ${type}-outof" id="${type}OutOfInput${c}" placeholder="0"/>
           <label for="${type}OutOfInput${c}">Out Of</label>
         </div>
+        <button
+          type="button"
+          class="remove-row-btn btn btn-link text-danger text-decoration-none p-0"
+          aria-label="Remove ${isQuiz ? "quiz" : "assessment"} entry"
+          style="font-size:1rem;line-height:1;"
+        >
+          X
+        </button>
       </div>
     </div>`;
   container.insertAdjacentHTML("beforeend", html);
+};
+
+const removeRow = (event) => {
+  const btn = event.target.closest(".remove-row-btn");
+  if (!btn) return;
+
+  const row = btn.closest(".assessment-row, .quiz-row");
+  if (row) row.remove();
 };
 
 const calcSection = ({
@@ -120,13 +136,23 @@ const calcAll = () => {
   // get the partial of assessmentTasks and quiz, then sum them up
   const total = Number((assess.partial + quiz.partial).toFixed(2));
 
+  // parse the input from floatingExamInput
+  const examScoreInput = $("examScoreInput1").value;
+  const examOutOfInput = $("examOutOfInput1").value;
+  const examPercentage = Number(
+    ((Number(examScoreInput) / Number(examOutOfInput)) * 50 + 50).toFixed(2),
+  );
+  const finalTotal = Number((0.5 * examPercentage + 0.5 * total).toFixed(2));
+
   // create Bootstrap card element to show the result
   const card = document.createElement("div");
   card.className = "card";
-  card.innerHTML = `<div class="card-body">Your class standing is <strong>${total}%</strong> (${assess.partial}% from Assessment Tasks and ${quiz.partial}% from Quiz).</div>`;
+  card.innerHTML = `<div class="card-body">Your class standing is <strong>${total}%</strong> (${assess.partial}% from Assessment Tasks and ${quiz.partial}% from Quiz).<br>Your final grade for the <b>PRELIM</b> is <strong>${finalTotal}%</strong>.</div>`;
 
   $("results").replaceChildren(card);
 };
 $("addFormBtn").addEventListener("click", () => addForm(false));
 $("addQuizFormBtn").addEventListener("click", () => addForm(true));
 $("calculateBtn").addEventListener("click", calcAll);
+$("formsContainer").addEventListener("click", removeRow);
+$("quizFormsContainer").addEventListener("click", removeRow);

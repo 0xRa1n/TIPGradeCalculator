@@ -140,18 +140,10 @@ const calcSection = ({
   outOfSel,
 }) => {
   const percentInput = container.querySelector(percentSel);
-  if (!percentInput || !percentInput.value.trim()) {
+  if (!percentInput) {
     showErrorModal(
       `Missing ${section} Percentage`,
       `Please enter a percentage for ${section} before calculating.`,
-    );
-    return null;
-  }
-  const norm = normalize(percentInput.value.trim());
-  if (norm === null) {
-    showErrorModal(
-      `Invalid ${section} Percentage`,
-      `Please enter a valid percentage value for ${section}.`,
     );
     return null;
   }
@@ -163,6 +155,23 @@ const calcSection = ({
       return s !== "" || o !== "" ? { s, o } : null;
     })
     .filter(Boolean);
+
+  // If a section has no encoded rows, treat it as 0% even when percentage is blank.
+  const percentRaw = percentInput.value.trim();
+  const norm = percentRaw === "" && !vals.length ? 0 : normalize(percentRaw);
+  if (norm === null) {
+    showErrorModal(
+      `Invalid ${section} Percentage`,
+      `Please enter a valid percentage value for ${section}.`,
+    );
+    return null;
+  }
+
+  // Allow empty section rows when this section has 0% weight.
+  if (norm === 0) {
+    return { average: 0, partial: 0 };
+  }
+
   if (!vals.length) {
     showErrorModal(
       `Missing ${section} Entries`,

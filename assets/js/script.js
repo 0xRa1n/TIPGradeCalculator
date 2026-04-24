@@ -116,6 +116,16 @@ const calcAll = () => {
   if (!quiz) return;
 
   console.log({ assess, quiz });
+
+  // get the partial of assessmentTasks and quiz, then sum them up
+  const total = Number((assess.partial + quiz.partial).toFixed(2));
+
+  // create Bootstrap card element to show the result
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `<div class="card-body">Your class standing is <strong>${total}%</strong> (${assess.partial}% from Assessment Tasks and ${quiz.partial}% from Quiz).</div>`;
+
+  $("results").replaceChildren(card);
 };
 $("addFormBtn").addEventListener("click", () => addForm(false));
 $("addQuizFormBtn").addEventListener("click", () => addForm(true));

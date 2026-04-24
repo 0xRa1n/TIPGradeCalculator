@@ -29,7 +29,7 @@ const termLabels = {
 
 const getRoundingMode = () => $("roundingModeSelect")?.value || "round";
 const truncateTo2 = (n) => Math.trunc(Number(n) * 100) / 100;
-const roundTo2 = (n) => Math.round(Number(n) * 100) / 100;
+const roundTo2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 const quantizeToMode = (n) => {
   const mode = getRoundingMode();
   return mode === "truncate" ? truncateTo2(n) : roundTo2(n);
@@ -205,10 +205,11 @@ const calcAll = () => {
 
   // get the partial of assessmentTasks and quiz, then sum them up
   const total = assess.partial + quiz.partial;
+  const classStanding = quantizeToMode(total);
 
   const examPercentage = parseExamPercentage();
   if (examPercentage === null) return;
-  const currentRaw = computeCurrentRaw(total, examPercentage);
+  const currentRaw = computeCurrentRaw(classStanding, examPercentage);
 
   let computedGrade = currentRaw;
   let previousGrade = null;
@@ -239,7 +240,7 @@ const calcAll = () => {
   // create Bootstrap card element to show the result
   const card = document.createElement("div");
   card.className = "card";
-  card.innerHTML = `<div class="card-body">Your class standing is <strong>${fmt2(total)}%</strong> (${fmt2(assess.partial)}% from Assessment Tasks and ${fmt2(quiz.partial)}% from Quiz).<br>Your current ${termLabels[selectedPeriod]} raw grade is <strong>${fmt2(currentRaw)}%</strong>.${previousGrade === null ? "" : `<br>Using ${selectedPeriod === "midterm" ? "Prelim" : "Midterm"} grade <strong>${fmt2(previousGrade)}%</strong> and current raw grade, your computed <b>${termLabels[selectedPeriod].toUpperCase()}</b> grade is <strong>${fmt2(computedGrade)}%</strong>.`}${previousGrade === null ? `<br>Your final grade for <b>PRELIM</b> is <strong>${fmt2(computedGrade)}%</strong>.` : ""}</div>`;
+  card.innerHTML = `<div class="card-body">Your class standing is <strong>${fmt2(classStanding)}%</strong> (${fmt2(assess.partial)}% from Assessment Tasks and ${fmt2(quiz.partial)}% from Quiz).<br>Your current ${termLabels[selectedPeriod]} raw grade is <strong>${fmt2(currentRaw)}%</strong>.${previousGrade === null ? "" : `<br>Using ${selectedPeriod === "midterm" ? "Prelim" : "Midterm"} grade <strong>${fmt2(previousGrade)}%</strong> and current raw grade, your computed <b>${termLabels[selectedPeriod].toUpperCase()}</b> grade is <strong>${fmt2(computedGrade)}%</strong>.`}${previousGrade === null ? `<br>Your final grade for <b>PRELIM</b> is <strong>${fmt2(computedGrade)}%</strong>.` : ""}</div>`;
 
   $("results").replaceChildren(card);
 };

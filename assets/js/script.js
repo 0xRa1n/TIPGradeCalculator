@@ -1,228 +1,122 @@
-const formsContainer = document.getElementById("formsContainer");
-const addFormBtn = document.getElementById("addFormBtn");
-const quizFormsContainer = document.getElementById("quizFormsContainer");
-const addQuizFormBtn = document.getElementById("addQuizFormBtn");
-const calculateBtn = document.getElementById("calculateBtn");
-const appErrorModalElement = document.getElementById("appErrorModal");
-const appErrorModalLabel = document.getElementById("appErrorModalLabel");
-const appErrorModalBody = document.getElementById("appErrorModalBody");
-let formCount = 1;
-let quizFormCount = 1;
+const $ = (id) => document.getElementById(id);
+let formCount = 1,
+  quizFormCount = 1;
 
-function showErrorModal(title, content) {
-  if (!appErrorModalElement || !appErrorModalLabel || !appErrorModalBody) {
-    console.error("Error modal elements are missing in the HTML.");
+const showErrorModal = (title, content) => {
+  if (
+    !$("appErrorModal") ||
+    !$("appErrorModalLabel") ||
+    !$("appErrorModalBody")
+  )
     return;
-  }
 
-  appErrorModalLabel.textContent = title;
-  appErrorModalBody.textContent = content;
-
-  const modalInstance =
-    bootstrap.Modal.getOrCreateInstance(appErrorModalElement);
-  modalInstance.show();
-}
-
+  $("appErrorModalLabel").textContent = title;
+  $("appErrorModalBody").textContent = content;
+  bootstrap.Modal.getOrCreateInstance($("appErrorModal")).show();
+};
 window.showErrorModal = showErrorModal;
 
-function normalizePercentageValue(rawValue) {
-  const parsed = Number(rawValue);
+const normalize = (v) => {
+  const n = Number(v);
+  return Number.isNaN(n) ? null : n > 1 ? n / 100 : n;
+};
 
-  if (Number.isNaN(parsed)) {
-    return null;
-  }
-
-  if (parsed > 1) {
-    return parsed / 100;
-  }
-
-  return parsed;
-}
-
-function addAssessmentForm() {
-  formCount += 1;
-
-  const formField = document.createElement("div");
-  formField.className = "assessment-row row g-3 mb-3";
-
-  formField.innerHTML = `
-    <div class="col-md-6">
-      <div class="form-floating">
-        <input
-          type="number"
-          class="form-control assessment-score"
-          id="scoreInput${formCount}"
-          placeholder="0"
-        />
-        <label for="scoreInput${formCount}">Assessment Task Score</label>
+const addForm = (isQuiz = false) => {
+  const c = isQuiz ? ++quizFormCount : ++formCount;
+  const type = isQuiz ? "quiz" : "assessment";
+  const container = $(isQuiz ? "quizFormsContainer" : "formsContainer");
+  const html = `
+    <div class="${type}-row row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="form-floating">
+          <input type="number" class="form-control ${type}-score" id="${type}ScoreInput${c}" placeholder="0"/>
+          <label for="${type}ScoreInput${c}">${isQuiz ? "Score" : "Assessment Task Score"}</label>
+        </div>
       </div>
-    </div>
-    <div class="col-md-6">
-      <div class="form-floating">
-        <input
-          type="number"
-          class="form-control assessment-outof"
-          id="outOfInput${formCount}"
-          placeholder="0"
-        />
-        <label for="outOfInput${formCount}">Out Of</label>
+      <div class="col-md-6">
+        <div class="form-floating">
+          <input type="number" class="form-control ${type}-outof" id="${type}OutOfInput${c}" placeholder="0"/>
+          <label for="${type}OutOfInput${c}">Out Of</label>
+        </div>
       </div>
-    </div>
-  `;
+    </div>`;
+  container.insertAdjacentHTML("beforeend", html);
+};
 
-  formsContainer.appendChild(formField);
-}
-
-function addQuizForm() {
-  quizFormCount += 1;
-
-  const formField = document.createElement("div");
-  formField.className = "quiz-row row g-3 mb-3";
-
-  formField.innerHTML = `
-    <div class="col-md-6">
-      <div class="form-floating">
-        <input
-          type="number"
-          class="form-control quiz-score"
-          id="quizScoreInput${quizFormCount}"
-          placeholder="0"
-        />
-        <label for="quizScoreInput${quizFormCount}">Score</label>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="form-floating">
-        <input
-          type="number"
-          class="form-control quiz-outof"
-          id="quizOutOfInput${quizFormCount}"
-          placeholder="0"
-        />
-        <label for="quizOutOfInput${quizFormCount}">Out Of</label>
-      </div>
-    </div>
-  `;
-
-  quizFormsContainer.appendChild(formField);
-}
-
-function calculateSection({
-  sectionName,
+const calcSection = ({
+  section,
   container,
-  percentageSelector,
-  rowSelector,
-  scoreSelector,
-  outOfSelector,
-}) {
-  const percentageInput = container.querySelector(percentageSelector);
-  const rows = container.querySelectorAll(rowSelector);
-  const values = [];
-  const percentages = [];
-  let normalizedPercentage = null;
-
-  if (percentageInput && percentageInput.value.trim() !== "") {
-    normalizedPercentage = normalizePercentageValue(
-      percentageInput.value.trim(),
-    );
-
-    if (normalizedPercentage === null) {
-      showErrorModal(
-        `Invalid ${sectionName} Percentage`,
-        `Please enter a valid percentage value for ${sectionName}.`,
-      );
-      return null;
-    }
-
-    console.log(
-      `${sectionName} percentage (normalized): ${normalizedPercentage}`,
-    );
-  } else {
+  percentSel,
+  rowSel,
+  scoreSel,
+  outOfSel,
+}) => {
+  const percentInput = container.querySelector(percentSel);
+  if (!percentInput || !percentInput.value.trim()) {
     showErrorModal(
-      `Missing ${sectionName} Percentage`,
-      `Please enter a percentage for ${sectionName} before calculating.`,
+      `Missing ${section} Percentage`,
+      `Please enter a percentage for ${section} before calculating.`,
+    );
+    return null;
+  }
+  const norm = normalize(percentInput.value.trim());
+  if (norm === null) {
+    showErrorModal(
+      `Invalid ${section} Percentage`,
+      `Please enter a valid percentage value for ${section}.`,
+    );
+    return null;
+  }
+  const rows = container.querySelectorAll(rowSel);
+  const vals = Array.from(rows)
+    .map((row, i) => {
+      const s = row.querySelector(scoreSel)?.value.trim(),
+        o = row.querySelector(outOfSel)?.value.trim();
+      return s !== "" || o !== "" ? { s, o } : null;
+    })
+    .filter(Boolean);
+  if (!vals.length) {
+    showErrorModal(
+      `Missing ${section} Entries`,
+      `Please fill at least one Score and Out Of pair for ${section}.`,
     );
     return null;
   }
 
-  rows.forEach((row, index) => {
-    const scoreInput = row.querySelector(scoreSelector);
-    const outOfInput = row.querySelector(outOfSelector);
-
-    if (!scoreInput || !outOfInput) {
-      return;
-    }
-
-    const score = scoreInput.value.trim();
-    const outOf = outOfInput.value.trim();
-
-    if (score !== "" || outOf !== "") {
-      values.push({
-        task: index + 1,
-        score,
-        outOf,
-      });
-    }
-  });
-
-  if (values.length === 0) {
-    showErrorModal(
-      `Missing ${sectionName} Entries`,
-      `Please fill at least one Score and Out Of pair for ${sectionName}.`,
-    );
-    return null;
-  }
-
-  for (const item of values) {
-    const rawCalculation = (Number(item.score) / Number(item.outOf)) * 50 + 50;
-    const calculation = Number(rawCalculation.toFixed(2));
-    percentages.push(calculation);
-  }
-
-  const total = percentages.reduce(
-    (totalValue, value) => totalValue + value,
-    0,
+  const percs = vals.map((v) =>
+    Number(((Number(v.s) / Number(v.o)) * 50 + 50).toFixed(2)),
   );
-  const average = Number((total / percentages.length).toFixed(2));
-  const partial = Number((average * normalizedPercentage).toFixed(2));
+  console.log({ percs });
+  const avg = Number(
+    (percs.reduce((a, b) => a + b, 0) / percs.length).toFixed(2),
+  );
 
-  console.log(`${sectionName} average: ${average}`);
-  console.log(`${sectionName} partial: ${partial}`);
+  const partial = Number((avg * norm).toFixed(2));
+  return { average: avg, partial };
+};
 
-  return {
-    average,
-    partial,
-  };
-}
-
-function calculateAndPrintFields() {
-  const assessmentResult = calculateSection({
-    sectionName: "Assessment Tasks",
-    container: formsContainer,
-    percentageSelector: "#floatingInput",
-    rowSelector: ".assessment-row",
-    scoreSelector: ".assessment-score",
-    outOfSelector: ".assessment-outof",
+const calcAll = () => {
+  const assess = calcSection({
+    section: "Assessment Tasks",
+    container: $("formsContainer"),
+    percentSel: "#floatingInput",
+    rowSel: ".assessment-row",
+    scoreSel: ".assessment-score",
+    outOfSel: ".assessment-outof",
   });
-
-  if (!assessmentResult) {
-    return;
-  }
-
-  const quizResult = calculateSection({
-    sectionName: "Quiz",
-    container: quizFormsContainer,
-    percentageSelector: "#floatingQuizInput",
-    rowSelector: ".quiz-row",
-    scoreSelector: ".quiz-score",
-    outOfSelector: ".quiz-outof",
+  if (!assess) return;
+  const quiz = calcSection({
+    section: "Quiz",
+    container: $("quizFormsContainer"),
+    percentSel: "#floatingQuizInput",
+    rowSel: ".quiz-row",
+    scoreSel: ".quiz-score",
+    outOfSel: ".quiz-outof",
   });
+  if (!quiz) return;
 
-  if (!quizResult) {
-    return;
-  }
-}
-
-addFormBtn.addEventListener("click", addAssessmentForm);
-addQuizFormBtn.addEventListener("click", addQuizForm);
-calculateBtn.addEventListener("click", calculateAndPrintFields);
+  console.log({ assess, quiz });
+};
+$("addFormBtn").addEventListener("click", () => addForm(false));
+$("addQuizFormBtn").addEventListener("click", () => addForm(true));
+$("calculateBtn").addEventListener("click", calcAll);

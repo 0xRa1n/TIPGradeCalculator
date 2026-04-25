@@ -30,9 +30,14 @@ const termLabels = {
 const getRoundingMode = () => $("roundingModeSelect")?.value || "round";
 const truncateTo2 = (n) => Math.trunc(Number(n) * 100) / 100;
 const roundTo2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+const ceilTo2 = (n) => Math.ceil((Number(n) - Number.EPSILON) * 100) / 100;
 const quantizeToMode = (n) => {
   const mode = getRoundingMode();
   return mode === "truncate" ? truncateTo2(n) : roundTo2(n);
+};
+const quantizeFinalToMode = (n) => {
+  const mode = getRoundingMode();
+  return mode === "truncate" ? truncateTo2(n) : ceilTo2(n);
 };
 const fmt2 = (n) => {
   return quantizeToMode(n).toFixed(2);
@@ -90,7 +95,7 @@ const parseExamPercentage = () => {
     return null;
   }
 
-  return (score / outOf) * 50 + 50;
+  return quantizeToMode((score / outOf) * 50 + 50);
 };
 
 const addForm = (isQuiz = false) => {
@@ -180,11 +185,13 @@ const calcSection = ({
     return null;
   }
 
-  const percs = vals.map((v) => (Number(v.s) / Number(v.o)) * 50 + 50);
-  console.log({ percs });
-  const avg = percs.reduce((a, b) => a + b, 0) / percs.length;
+  // Match most LMS implementations: quantize each stage to 2 decimals.
+  const percs = vals.map((v) =>
+    quantizeToMode((Number(v.s) / Number(v.o)) * 50 + 50),
+  );
+  const avg = quantizeToMode(percs.reduce((a, b) => a + b, 0) / percs.length);
 
-  const partial = avg * norm;
+  const partial = quantizeToMode(avg * norm);
   return { average: avg, partial };
 };
 
@@ -212,15 +219,15 @@ const calcAll = () => {
 
   console.log({ assess, quiz });
 
-  // get the partial of assessmentTasks and quiz, then sum them up
-  const total = assess.partial + quiz.partial;
-  const classStanding = quantizeToMode(total);
+  const classStanding = quantizeToMode(assess.partial + quiz.partial);
 
   const examPercentage = parseExamPercentage();
   if (examPercentage === null) return;
-  const currentRaw = computeCurrentRaw(classStanding, examPercentage);
+  const currentRaw = quantizeToMode(
+    computeCurrentRaw(classStanding, examPercentage),
+  );
 
-  let computedGrade = currentRaw;
+  let computedGrade = quantizeFinalToMode(currentRaw);
   let previousGrade = null;
   if (selectedPeriod !== "prelim") {
     const previousLabel = selectedPeriod === "midterm" ? "Prelim" : "Midterm";
@@ -243,7 +250,9 @@ const calcAll = () => {
       return;
     }
 
-    computedGrade = computeTermGrade(selectedPeriod, currentRaw, previousGrade);
+    computedGrade = quantizeFinalToMode(
+      computeTermGrade(selectedPeriod, currentRaw, previousGrade),
+    );
   }
 
   // create Bootstrap card element to show the result
@@ -253,9 +262,33 @@ const calcAll = () => {
 
   $("results").replaceChildren(card);
 };
+
+const clearAll = () => {
+  // Keep the initial row for each section, remove only dynamically added rows.
+  document
+    .querySelectorAll(".assessment-row, .quiz-row")
+    .forEach((row, index) => {
+      if (index > 0) row.remove();
+    });
+
+  formCount = 1;
+  quizFormCount = 1;
+
+  document
+    .querySelectorAll('input[type="number"]')
+    .forEach((input) => (input.value = ""));
+
+  if ($("gradingPeriodSelect")) $("gradingPeriodSelect").value = "prelim";
+  if ($("roundingModeSelect")) $("roundingModeSelect").value = "round";
+
+  $("results")?.replaceChildren();
+  updatePreviousGradeUI();
+};
+
 $("addFormBtn").addEventListener("click", () => addForm(false));
 $("addQuizFormBtn").addEventListener("click", () => addForm(true));
 $("calculateBtn").addEventListener("click", calcAll);
+$("clearBtn")?.addEventListener("click", clearAll);
 $("roundingModeSelect")?.addEventListener("change", () => {
   if ($("results")?.children.length) calcAll();
 });

@@ -358,36 +358,30 @@ const openParseModal = (section) => {
   bootstrap.Modal.getOrCreateInstance(modalEl).show();
 };
 
-const ensureSectionRowCount = (section, count) => {
+const ensureSectionAdditionalRows = (section, additionalCount) => {
   const isQuiz = section === "quiz";
   const rowSelector = isQuiz ? ".quiz-row" : ".assessment-row";
-  const rows = document.querySelectorAll(rowSelector);
-
-  if (rows.length < count) {
-    for (let i = rows.length; i < count; i += 1) {
-      addForm(isQuiz);
-    }
-  }
-
-  const updatedRows = Array.from(document.querySelectorAll(rowSelector));
-  if (updatedRows.length > count) {
-    updatedRows.slice(count).forEach((row) => row.remove());
+  for (let i = 0; i < additionalCount; i += 1) {
+    addForm(isQuiz);
   }
 };
 
 const applyParsedRowsToSection = (section, parsedRows) => {
   if (!Array.isArray(parsedRows) || !parsedRows.length) return;
 
-  ensureSectionRowCount(section, parsedRows.length);
-
   const isQuiz = section === "quiz";
   const rowSelector = isQuiz ? ".quiz-row" : ".assessment-row";
   const scoreSelector = isQuiz ? ".quiz-score" : ".assessment-score";
   const outOfSelector = isQuiz ? ".quiz-outof" : ".assessment-outof";
+  const existingRows = Array.from(document.querySelectorAll(rowSelector));
+  const startIndex = existingRows.length;
+
+  ensureSectionAdditionalRows(section, parsedRows.length);
+
   const rows = Array.from(document.querySelectorAll(rowSelector));
 
   parsedRows.forEach((entry, index) => {
-    const row = rows[index];
+    const row = rows[startIndex + index];
     if (!row) return;
     const scoreInput = row.querySelector(scoreSelector);
     const outOfInput = row.querySelector(outOfSelector);

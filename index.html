@@ -49,6 +49,19 @@
                     >
                   </div>
                 </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="classStandingDirectInput"
+                      placeholder="0"
+                    />
+                    <label for="classStandingDirectInput"
+                      >LMS Class Standing % (Optional)</label
+                    >
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -185,8 +198,34 @@
             <div class="card-body">
               <div id="examFormsContainer">
                 <h2>Exam</h2>
-                <div class="exam-row row g-3 mb-3">
+                <div class="row g-3 mb-3">
                   <div class="col-md-6">
+                    <div class="form-floating">
+                      <select class="form-select" id="examInputModeSelect">
+                        <option value="auto" selected>
+                          Auto (Score/Out Of Rows)
+                        </option>
+                        <option value="direct">Use LMS Exam Percentage</option>
+                      </select>
+                      <label for="examInputModeSelect">Exam Input Mode</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6 d-none" id="examDirectWrap">
+                    <div class="form-floating">
+                      <input
+                        type="number"
+                        class="form-control"
+                        id="examDirectPercentageInput"
+                        placeholder="0"
+                      />
+                      <label for="examDirectPercentageInput"
+                        >LMS Exam Percentage</label
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="exam-row row g-3 mb-3">
+                  <div class="col-md-4">
                     <div class="form-floating">
                       <input
                         type="number"
@@ -197,7 +236,7 @@
                       <label for="examScoreInput1">Score</label>
                     </div>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4">
                     <div class="form-floating">
                       <input
                         type="number"
@@ -208,7 +247,27 @@
                       <label for="examOutOfInput1">Out Of</label>
                     </div>
                   </div>
+                  <div class="col-md-4">
+                    <div class="form-floating">
+                      <input
+                        type="number"
+                        class="form-control exam-weight"
+                        id="examWeightInput1"
+                        placeholder="0"
+                      />
+                      <label for="examWeightInput1">Weight (%) Optional</label>
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div class="d-flex justify-content-end mt-3">
+                <button
+                  id="addExamFormBtn"
+                  class="btn btn-primary"
+                  type="button"
+                >
+                  Add
+                </button>
               </div>
             </div>
           </div>

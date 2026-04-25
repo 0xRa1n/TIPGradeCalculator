@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 let formCount = 1,
-  quizFormCount = 1;
+  quizFormCount = 1,
+  examFormCount = 1;
 let parseTargetSection = "assessment";
 
 const showErrorModal = (title, content) => {
@@ -99,37 +100,177 @@ const updatePreviousGradeUI = () => {
   label.textContent = period === "midterm" ? "Prelim Grade" : "Midterm Grade";
 };
 
-const parseExamPercentage = () => {
-  const examScoreInput = $("examScoreInput1")?.value.trim();
-  const examOutOfInput = $("examOutOfInput1")?.value.trim();
+const updateExamInputModeUI = () => {
+  const modeSelect = $("examInputModeSelect");
+  const directWrap = $("examDirectWrap");
+  if (!modeSelect || !directWrap) return;
 
-  if (!examScoreInput || !examOutOfInput) {
+  if (modeSelect.value === "direct") {
+    directWrap.classList.remove("d-none");
+  } else {
+    directWrap.classList.add("d-none");
+  }
+};
+
+const parseExamPercentage = () => {
+  const mode = $("examInputModeSelect")?.value || "auto";
+  if (mode === "direct") {
+    const directInput = $("examDirectPercentageInput")?.value.trim() || "";
+    if (!directInput) {
+      showErrorModal(
+        "Missing LMS Exam Percentage",
+        "Please enter the LMS Exam Percentage value.",
+      );
+      return null;
+    }
+
+    const directValue = Number(directInput);
+    if (Number.isNaN(directValue) || directValue < 0 || directValue > 100) {
+      showErrorModal(
+        "Invalid LMS Exam Percentage",
+        "LMS Exam Percentage must be a number between 0 and 100.",
+      );
+      return null;
+    }
+
+    return roundTo2(directValue);
+  }
+
+  const rows = Array.from(document.querySelectorAll(".exam-row"));
+  const vals = rows
+    .map((row) => {
+      const score = row.querySelector(".exam-score")?.value.trim() || "";
+      const outOf = row.querySelector(".exam-outof")?.value.trim() || "";
+      const weight = row.querySelector(".exam-weight")?.value.trim() || "";
+      return score !== "" || outOf !== "" || weight !== ""
+        ? { score, outOf, weight }
+        : null;
+    })
+    .filter(Boolean);
+
+  if (!vals.length) {
     showErrorModal(
       "Missing Exam Entries",
-      "Please enter both Exam Score and Exam Out Of values.",
+      "Please enter at least one Exam Score and Exam Out Of pair.",
     );
     return null;
   }
 
-  const score = Number(examScoreInput);
-  const outOf = Number(examOutOfInput);
-  if (Number.isNaN(score) || Number.isNaN(outOf) || outOf <= 0 || score < 0) {
-    showErrorModal(
-      "Invalid Exam Entries",
-      "Exam Score must be a non-negative number and Exam Out Of must be greater than 0.",
-    );
-    return null;
+  const parsedVals = [];
+  for (const [index, v] of vals.entries()) {
+    if (v.score === "" || v.outOf === "") {
+      showErrorModal(
+        "Incomplete Exam Entry",
+        `Exam row ${index + 1} must have both Score and Out Of values.`,
+      );
+      return null;
+    }
+
+    const score = Number(v.score);
+    const outOf = Number(v.outOf);
+
+    if (Number.isNaN(score) || Number.isNaN(outOf) || outOf <= 0 || score < 0) {
+      showErrorModal(
+        "Invalid Exam Entries",
+        `Exam row ${index + 1} must have a non-negative Score and an Out Of value greater than 0.`,
+      );
+      return null;
+    }
+
+    if (score > outOf) {
+      showErrorModal(
+        "Invalid Exam Entries",
+        `Exam row ${index + 1} has Score greater than Out Of. This looks reversed. Please swap the values and try again.`,
+      );
+      return null;
+    }
+
+    let weight = null;
+    if (v.weight !== "") {
+      weight = Number(v.weight);
+      if (Number.isNaN(weight) || weight < 0) {
+        showErrorModal(
+          "Invalid Exam Weight",
+          `Exam row ${index + 1} must have a valid non-negative weight percentage.`,
+        );
+        return null;
+      }
+    }
+
+    parsedVals.push({ score, outOf, weight });
   }
 
-  if (score > outOf) {
-    showErrorModal(
-      "Invalid Exam Entries",
-      "Exam Score is greater than Exam Out Of. This looks reversed. Please swap the values and try again.",
+  const hasAnyWeight = parsedVals.some((entry) => entry.weight !== null);
+
+  if (hasAnyWeight) {
+    const hasMissingWeight = parsedVals.some((entry) => entry.weight === null);
+    if (hasMissingWeight) {
+      showErrorModal(
+        "Missing Exam Weights",
+        "When using Exam component weights, every filled exam row must include a Weight (%).",
+      );
+      return null;
+    }
+
+    const totalWeight = roundTo2(
+      parsedVals.reduce((sum, entry) => sum + entry.weight, 0),
     );
-    return null;
+
+    if (Math.abs(totalWeight - 100) > 0.01) {
+      showErrorModal(
+        "Invalid Exam Weights",
+        `Exam weights must add up to 100%. Current total is ${fmt2(totalWeight)}%.`,
+      );
+      return null;
+    }
+
+    const weighted = parsedVals.reduce((sum, entry) => {
+      const transmuted = roundTo2((entry.score / entry.outOf) * 50 + 50);
+      const contribution = roundTo2(transmuted * (entry.weight / 100));
+      return roundTo2(sum + contribution);
+    }, 0);
+
+    return roundTo2(weighted);
   }
 
-  return roundTo2((score / outOf) * 50 + 50);
+  const totalScore = parsedVals.reduce((sum, entry) => sum + entry.score, 0);
+  const totalOutOf = parsedVals.reduce((sum, entry) => sum + entry.outOf, 0);
+  return roundTo2((totalScore / totalOutOf) * 50 + 50);
+};
+
+const addExamForm = () => {
+  const c = ++examFormCount;
+  const container = $("examFormsContainer");
+  const html = `
+    <div class="exam-row row g-3 mb-3 position-relative">
+      <div class="col-md-4">
+        <div class="form-floating">
+          <input type="number" class="form-control exam-score" id="examScoreInput${c}" placeholder="0"/>
+          <label for="examScoreInput${c}">Score</label>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-floating">
+          <input type="number" class="form-control exam-outof" id="examOutOfInput${c}" placeholder="0"/>
+          <label for="examOutOfInput${c}">Out Of</label>
+        </div>
+      </div>
+      <div class="col-md-4 d-flex align-items-center gap-2">
+        <div class="form-floating flex-grow-1">
+          <input type="number" class="form-control exam-weight" id="examWeightInput${c}" placeholder="0"/>
+          <label for="examWeightInput${c}">Weight (%) Optional</label>
+        </div>
+        <button
+          type="button"
+          class="remove-row-btn btn btn-link text-danger text-decoration-none p-0"
+          aria-label="Remove exam entry"
+          style="font-size:1rem;line-height:1;"
+        >
+          X
+        </button>
+      </div>
+    </div>`;
+  container.insertAdjacentHTML("beforeend", html);
 };
 
 const addForm = (isQuiz = false) => {
@@ -166,7 +307,7 @@ const removeRow = (event) => {
   const btn = event.target.closest(".remove-row-btn");
   if (!btn) return;
 
-  const row = btn.closest(".assessment-row, .quiz-row");
+  const row = btn.closest(".assessment-row, .quiz-row, .exam-row");
   if (row) row.remove();
 };
 
@@ -284,7 +425,30 @@ const calcAll = () => {
   });
   if (!quiz) return;
 
-  const classStanding = roundTo2(assess.partial + quiz.partial);
+  const autoClassStanding = roundTo2(assess.partial + quiz.partial);
+  const directClassStandingInput =
+    $("classStandingDirectInput")?.value.trim() || "";
+
+  let classStanding = autoClassStanding;
+  let usedClassStandingOverride = false;
+
+  if (directClassStandingInput !== "") {
+    const directClassStanding = Number(directClassStandingInput);
+    if (
+      Number.isNaN(directClassStanding) ||
+      directClassStanding < 0 ||
+      directClassStanding > 100
+    ) {
+      showErrorModal(
+        "Invalid LMS Class Standing",
+        "LMS Class Standing % must be a number between 0 and 100.",
+      );
+      return;
+    }
+
+    classStanding = roundTo2(directClassStanding);
+    usedClassStandingOverride = true;
+  }
 
   const examPercentage = parseExamPercentage();
   if (examPercentage === null) return;
@@ -323,7 +487,10 @@ const calcAll = () => {
   // create Bootstrap card element to show the result
   const card = document.createElement("div");
   card.className = "card";
-  card.innerHTML = `<div class="card-body">Your class standing is <strong>${fmt2(classStanding)}%</strong> (${fmt2(assess.partial)}% from Assessment Tasks and ${fmt2(quiz.partial)}% from Quiz).${previousGrade === null ? "" : `<br>Using ${selectedPeriod === "midterm" ? "Prelim" : "Midterm"} grade <strong>${fmt2(previousGrade)}%</strong> your computed <b>${termLabels[selectedPeriod].toUpperCase()}</b> grade is <strong>${fmt2(computedGrade)}%</strong>.`}${previousGrade === null ? `<br>Your final grade for <b>PRELIM</b> is <strong>${fmt2(computedGrade)}%</strong>.` : ""}<br>Equivalent grade: <strong>${equivalentGrade}</strong>.</div>`;
+  const classStandingText = usedClassStandingOverride
+    ? `Your class standing is <strong>${fmt2(classStanding)}%</strong> (using LMS Class Standing override).`
+    : `Your class standing is <strong>${fmt2(classStanding)}%</strong> (${fmt2(assess.partial)}% from Assessment Tasks and ${fmt2(quiz.partial)}% from Quiz).`;
+  card.innerHTML = `<div class="card-body">${classStandingText}${previousGrade === null ? "" : `<br>Using ${selectedPeriod === "midterm" ? "Prelim" : "Midterm"} grade <strong>${fmt2(previousGrade)}%</strong> your computed <b>${termLabels[selectedPeriod].toUpperCase()}</b> grade is <strong>${fmt2(computedGrade)}%</strong>.`}${previousGrade === null ? `<br>Your final grade for <b>PRELIM</b> is <strong>${fmt2(computedGrade)}%</strong>.` : ""}<br>Equivalent grade: <strong>${equivalentGrade}</strong>.</div>`;
 
   $("results").replaceChildren(card);
 };
@@ -336,15 +503,21 @@ const clearAll = () => {
   document.querySelectorAll(".quiz-row").forEach((row, index) => {
     if (index > 0) row.remove();
   });
+  document.querySelectorAll(".exam-row").forEach((row, index) => {
+    if (index > 0) row.remove();
+  });
 
   formCount = 1;
   quizFormCount = 1;
+  examFormCount = 1;
 
   document
     .querySelectorAll('input[type="number"]')
     .forEach((input) => (input.value = ""));
 
   if ($("gradingPeriodSelect")) $("gradingPeriodSelect").value = "prelim";
+  if ($("examInputModeSelect")) $("examInputModeSelect").value = "auto";
+  updateExamInputModeUI();
 
   $("results")?.replaceChildren();
   updatePreviousGradeUI();
@@ -462,6 +635,7 @@ const extractItemsAndRawScores = (inputText) => {
 
 $("addFormBtn").addEventListener("click", () => addForm(false));
 $("addQuizFormBtn").addEventListener("click", () => addForm(true));
+$("addExamFormBtn")?.addEventListener("click", addExamForm);
 $("parseAssessmentBtn")?.addEventListener("click", () =>
   openParseModal("assessment"),
 );
@@ -470,6 +644,9 @@ $("parseRowsSubmitBtn")?.addEventListener("click", onParseSubmit);
 $("calculateBtn").addEventListener("click", calcAll);
 $("clearBtn")?.addEventListener("click", clearAll);
 $("gradingPeriodSelect").addEventListener("change", updatePreviousGradeUI);
+$("examInputModeSelect")?.addEventListener("change", updateExamInputModeUI);
 $("formsContainer").addEventListener("click", removeRow);
 $("quizFormsContainer").addEventListener("click", removeRow);
+$("examFormsContainer")?.addEventListener("click", removeRow);
 updatePreviousGradeUI();
+updateExamInputModeUI();

@@ -81,18 +81,6 @@ const computeCurrentRaw = (classStanding, examPercentage) => {
   return roundTo2(examPart + standingPart);
 };
 
-const logSectionBreakdown = (label, sectionResult) => {
-  console.group(`[${label}] Calculation`);
-  console.log("Entries (score/outOf):", sectionResult.entries);
-  console.log("Per-item percentages:", sectionResult.percs);
-  console.log("Average:", sectionResult.average);
-  console.log("Weight:", sectionResult.weight);
-  console.log(
-    `Weighted partial: ${sectionResult.average} * ${sectionResult.weight} = ${sectionResult.partial}`,
-  );
-  console.groupEnd();
-};
-
 const updatePreviousGradeUI = () => {
   const select = $("gradingPeriodSelect");
   const wrap = $("previousGradeWrap");
@@ -263,18 +251,14 @@ const calcSection = ({
     parsedVals.push({ score, outOf });
   }
 
-  const percs = parsedVals.map((v) => roundTo2((v.score / v.outOf) * 50 + 50));
-  const percCents = percs.map((value) => Math.round(value * 100));
-  const sumCents = percCents.reduce((a, b) => a + b, 0);
-  const avg = roundTo2(sumCents / percs.length / 100);
+  const totalScore = parsedVals.reduce((sum, v) => sum + v.score, 0);
+  const totalOutOf = parsedVals.reduce((sum, v) => sum + v.outOf, 0);
+  const avg = roundTo2((totalScore / totalOutOf) * 50 + 50);
 
   const partial = roundTo2(avg * norm);
   return {
     average: avg,
     partial,
-    weight: norm,
-    percs,
-    entries: parsedVals.map((v) => ({ score: v.score, outOf: v.outOf })),
   };
 };
 
@@ -300,36 +284,12 @@ const calcAll = () => {
   });
   if (!quiz) return;
 
-  console.group("Grade Calculation Breakdown");
-  logSectionBreakdown("Assessment Tasks", assess);
-  logSectionBreakdown("Quiz", quiz);
-
   const classStanding = roundTo2(assess.partial + quiz.partial);
-  console.group("[Class Standing]");
-  console.log(`${assess.partial} + ${quiz.partial} = ${classStanding}`);
-  console.groupEnd();
 
   const examPercentage = parseExamPercentage();
-  if (examPercentage === null) {
-    console.groupEnd();
-    return;
-  }
-
-  console.group("[Exam]");
-  console.log("Transmuted exam percentage:", examPercentage);
-  console.groupEnd();
+  if (examPercentage === null) return;
 
   const currentRaw = roundTo2(computeCurrentRaw(classStanding, examPercentage));
-  const standingHalf = roundTo2(0.5 * classStanding);
-  const examHalf = roundTo2(0.5 * examPercentage);
-
-  console.group("[Current Raw Grade]");
-  console.log(
-    `Class standing contribution: 0.5 * ${classStanding} = ${standingHalf}`,
-  );
-  console.log(`Exam contribution: 0.5 * ${examPercentage} = ${examHalf}`);
-  console.log(`Current raw: ${standingHalf} + ${examHalf} = ${currentRaw}`);
-  console.groupEnd();
 
   let computedGrade = truncateTo2(currentRaw);
   let previousGrade = null;
@@ -351,34 +311,14 @@ const calcAll = () => {
         `Invalid ${previousLabel} Grade`,
         `Please enter a valid numeric value for ${previousLabel} grade.`,
       );
-      console.groupEnd();
       return;
     }
 
-    const prevPart = truncateTo2(previousGrade / 3);
-    const currentPart = truncateTo2((2 * currentRaw) / 3);
     computedGrade = truncateTo2(
       computeTermGrade(selectedPeriod, currentRaw, previousGrade),
     );
-
-    console.group(`[${termLabels[selectedPeriod]} Grade]`);
-    console.log(`Previous grade part: ${previousGrade} / 3 = ${prevPart}`);
-    console.log(`Current raw part: (2 * ${currentRaw}) / 3 = ${currentPart}`);
-    console.log(
-      `Computed term grade: ${prevPart} + ${currentPart} = ${computedGrade}`,
-    );
-    console.groupEnd();
-  } else {
-    console.group("[Prelim Grade]");
-    console.log(`Computed prelim grade: ${computedGrade}`);
-    console.groupEnd();
   }
   const equivalentGrade = getEquivalentGrade(computedGrade);
-
-  console.group("[Equivalent Grade]");
-  console.log(`From ${computedGrade}% -> ${equivalentGrade}`);
-  console.groupEnd();
-  console.groupEnd();
 
   // create Bootstrap card element to show the result
   const card = document.createElement("div");

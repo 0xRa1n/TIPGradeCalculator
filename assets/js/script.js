@@ -30,14 +30,13 @@ const termLabels = {
 const getRoundingMode = () => $("roundingModeSelect")?.value || "round";
 const truncateTo2 = (n) => Math.trunc(Number(n) * 100) / 100;
 const roundTo2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
-const ceilTo2 = (n) => Math.ceil((Number(n) - Number.EPSILON) * 100) / 100;
 const quantizeToMode = (n) => {
   const mode = getRoundingMode();
   return mode === "truncate" ? truncateTo2(n) : roundTo2(n);
 };
 const quantizeFinalToMode = (n) => {
-  const mode = getRoundingMode();
-  return mode === "truncate" ? truncateTo2(n) : ceilTo2(n);
+  // Do not force-up final grade values; this avoids +0.01 inflation on decimals.
+  return truncateTo2(n);
 };
 const fmt2 = (n) => {
   return quantizeToMode(n).toFixed(2);
@@ -87,10 +86,18 @@ const parseExamPercentage = () => {
 
   const score = Number(examScoreInput);
   const outOf = Number(examOutOfInput);
-  if (Number.isNaN(score) || Number.isNaN(outOf) || outOf <= 0) {
+  if (Number.isNaN(score) || Number.isNaN(outOf) || outOf <= 0 || score < 0) {
     showErrorModal(
       "Invalid Exam Entries",
-      "Exam Score must be numeric and Exam Out Of must be greater than 0.",
+      "Exam Score must be a non-negative number and Exam Out Of must be greater than 0.",
+    );
+    return null;
+  }
+
+  if (score > outOf) {
+    showErrorModal(
+      "Invalid Exam Entries",
+      "Exam Score is greater than Exam Out Of. This looks reversed. Please swap the values and try again.",
     );
     return null;
   }
@@ -185,9 +192,41 @@ const calcSection = ({
     return null;
   }
 
+  const parsedVals = [];
+  for (const [index, v] of vals.entries()) {
+    if (v.s === "" || v.o === "") {
+      showErrorModal(
+        `Incomplete ${section} Entry`,
+        `${section} row ${index + 1} must have both Score and Out Of values.`,
+      );
+      return null;
+    }
+
+    const score = Number(v.s);
+    const outOf = Number(v.o);
+
+    if (Number.isNaN(score) || Number.isNaN(outOf) || outOf <= 0 || score < 0) {
+      showErrorModal(
+        `Invalid ${section} Entry`,
+        `${section} row ${index + 1} must have a non-negative Score and an Out Of value greater than 0.`,
+      );
+      return null;
+    }
+
+    if (score > outOf) {
+      showErrorModal(
+        `Invalid ${section} Entry`,
+        `${section} row ${index + 1} has Score greater than Out Of. This looks reversed. Please swap the values and try again.`,
+      );
+      return null;
+    }
+
+    parsedVals.push({ score, outOf });
+  }
+
   // Match most LMS implementations: quantize each stage to 2 decimals.
-  const percs = vals.map((v) =>
-    quantizeToMode((Number(v.s) / Number(v.o)) * 50 + 50),
+  const percs = parsedVals.map((v) =>
+    quantizeToMode((v.score / v.outOf) * 50 + 50),
   );
   const avg = quantizeToMode(percs.reduce((a, b) => a + b, 0) / percs.length);
 

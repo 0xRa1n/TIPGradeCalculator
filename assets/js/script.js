@@ -42,6 +42,22 @@ const fmt2 = (n) => {
   return quantizeToMode(n).toFixed(2);
 };
 
+const getEquivalentGrade = (percentage) => {
+  const p = Number(percentage);
+  if (Number.isNaN(p)) return null;
+
+  if (p >= 99) return "1.00";
+  if (p >= 96) return "1.25";
+  if (p >= 93) return "1.50";
+  if (p >= 90) return "1.75";
+  if (p >= 87) return "2.00";
+  if (p >= 84) return "2.25";
+  if (p >= 81) return "2.50";
+  if (p >= 78) return "2.75";
+  if (p >= 75) return "3.00";
+  return "5.00";
+};
+
 const computeTermGrade = (period, currentRaw, previousGrade = null) => {
   if (period === "prelim") return currentRaw;
 
@@ -293,22 +309,24 @@ const calcAll = () => {
       computeTermGrade(selectedPeriod, currentRaw, previousGrade),
     );
   }
+  const equivalentGrade = getEquivalentGrade(computedGrade);
 
   // create Bootstrap card element to show the result
   const card = document.createElement("div");
   card.className = "card";
-  card.innerHTML = `<div class="card-body">Your class standing is <strong>${fmt2(classStanding)}%</strong> (${fmt2(assess.partial)}% from Assessment Tasks and ${fmt2(quiz.partial)}% from Quiz).<br>Your current ${termLabels[selectedPeriod]} raw grade is <strong>${fmt2(currentRaw)}%</strong>.${previousGrade === null ? "" : `<br>Using ${selectedPeriod === "midterm" ? "Prelim" : "Midterm"} grade <strong>${fmt2(previousGrade)}%</strong> and current raw grade, your computed <b>${termLabels[selectedPeriod].toUpperCase()}</b> grade is <strong>${fmt2(computedGrade)}%</strong>.`}${previousGrade === null ? `<br>Your final grade for <b>PRELIM</b> is <strong>${fmt2(computedGrade)}%</strong>.` : ""}</div>`;
+  card.innerHTML = `<div class="card-body">Your class standing is <strong>${fmt2(classStanding)}%</strong> (${fmt2(assess.partial)}% from Assessment Tasks and ${fmt2(quiz.partial)}% from Quiz).${previousGrade === null ? "" : `<br>Using ${selectedPeriod === "midterm" ? "Prelim" : "Midterm"} grade <strong>${fmt2(previousGrade)}%</strong> your computed <b>${termLabels[selectedPeriod].toUpperCase()}</b> grade is <strong>${fmt2(computedGrade)}%</strong>.`}${previousGrade === null ? `<br>Your final grade for <b>PRELIM</b> is <strong>${fmt2(computedGrade)}%</strong>.` : ""}<br>Equivalent grade: <strong>${equivalentGrade}</strong>.</div>`;
 
   $("results").replaceChildren(card);
 };
 
 const clearAll = () => {
   // Keep the initial row for each section, remove only dynamically added rows.
-  document
-    .querySelectorAll(".assessment-row, .quiz-row")
-    .forEach((row, index) => {
-      if (index > 0) row.remove();
-    });
+  document.querySelectorAll(".assessment-row").forEach((row, index) => {
+    if (index > 0) row.remove();
+  });
+  document.querySelectorAll(".quiz-row").forEach((row, index) => {
+    if (index > 0) row.remove();
+  });
 
   formCount = 1;
   quizFormCount = 1;

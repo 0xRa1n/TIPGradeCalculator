@@ -28,19 +28,25 @@ const termLabels = {
   final: "Final",
 };
 
-const getRoundingMode = () => $("roundingModeSelect")?.value || "round";
-const truncateTo2 = (n) => Math.trunc(Number(n) * 100) / 100;
-const roundTo2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
-const quantizeToMode = (n) => {
-  const mode = getRoundingMode();
-  return mode === "truncate" ? truncateTo2(n) : roundTo2(n);
+const roundTo2 = (n) => {
+  const num = Number(n);
+  if (!Number.isFinite(num)) return num;
+
+  // Stabilize floating-point representation before half-up rounding.
+  const normalized = Number(num.toFixed(10));
+  return Math.round((normalized + Number.EPSILON) * 100) / 100;
 };
-const quantizeFinalToMode = (n) => {
-  // Do not force-up final grade values; this avoids +0.01 inflation on decimals.
-  return truncateTo2(n);
+
+const truncateTo2 = (n) => {
+  const num = Number(n);
+  if (!Number.isFinite(num)) return num;
+  return Math.trunc(num * 100) / 100;
 };
+
 const fmt2 = (n) => {
-  return quantizeToMode(n).toFixed(2);
+  const num = Number(n);
+  if (!Number.isFinite(num)) return "";
+  return roundTo2(num).toFixed(2);
 };
 
 const getEquivalentGrade = (percentage) => {
@@ -60,15 +66,31 @@ const getEquivalentGrade = (percentage) => {
 };
 
 const computeTermGrade = (period, currentRaw, previousGrade = null) => {
-  if (period === "prelim") return currentRaw;
+  if (period === "prelim") return truncateTo2(currentRaw);
 
   // Midterm/Final: 1/3 of previous period grade + 2/3 of current period raw.
-  return previousGrade / 3 + (2 * currentRaw) / 3;
+  const prevPart = truncateTo2(previousGrade / 3);
+  const currentPart = truncateTo2((2 * currentRaw) / 3);
+  return truncateTo2(prevPart + currentPart);
 };
 
 const computeCurrentRaw = (classStanding, examPercentage) => {
   // Raw grade inside a period is always 50% exam + 50% class standing.
-  return 0.5 * examPercentage + 0.5 * classStanding;
+  const examPart = roundTo2(0.5 * examPercentage);
+  const standingPart = roundTo2(0.5 * classStanding);
+  return roundTo2(examPart + standingPart);
+};
+
+const logSectionBreakdown = (label, sectionResult) => {
+  console.group(`[${label}] Calculation`);
+  console.log("Entries (score/outOf):", sectionResult.entries);
+  console.log("Per-item percentages:", sectionResult.percs);
+  console.log("Average:", sectionResult.average);
+  console.log("Weight:", sectionResult.weight);
+  console.log(
+    `Weighted partial: ${sectionResult.average} * ${sectionResult.weight} = ${sectionResult.partial}`,
+  );
+  console.groupEnd();
 };
 
 const updatePreviousGradeUI = () => {
@@ -119,7 +141,7 @@ const parseExamPercentage = () => {
     return null;
   }
 
-  return quantizeToMode((score / outOf) * 50 + 50);
+  return roundTo2((score / outOf) * 50 + 50);
 };
 
 const addForm = (isQuiz = false) => {
@@ -241,14 +263,19 @@ const calcSection = ({
     parsedVals.push({ score, outOf });
   }
 
-  // Match most LMS implementations: quantize each stage to 2 decimals.
-  const percs = parsedVals.map((v) =>
-    quantizeToMode((v.score / v.outOf) * 50 + 50),
-  );
-  const avg = quantizeToMode(percs.reduce((a, b) => a + b, 0) / percs.length);
+  const percs = parsedVals.map((v) => roundTo2((v.score / v.outOf) * 50 + 50));
+  const percCents = percs.map((value) => Math.round(value * 100));
+  const sumCents = percCents.reduce((a, b) => a + b, 0);
+  const avg = roundTo2(sumCents / percs.length / 100);
 
-  const partial = quantizeToMode(avg * norm);
-  return { average: avg, partial };
+  const partial = roundTo2(avg * norm);
+  return {
+    average: avg,
+    partial,
+    weight: norm,
+    percs,
+    entries: parsedVals.map((v) => ({ score: v.score, outOf: v.outOf })),
+  };
 };
 
 const calcAll = () => {
@@ -273,17 +300,38 @@ const calcAll = () => {
   });
   if (!quiz) return;
 
-  console.log({ assess, quiz });
+  console.group("Grade Calculation Breakdown");
+  logSectionBreakdown("Assessment Tasks", assess);
+  logSectionBreakdown("Quiz", quiz);
 
-  const classStanding = quantizeToMode(assess.partial + quiz.partial);
+  const classStanding = roundTo2(assess.partial + quiz.partial);
+  console.group("[Class Standing]");
+  console.log(`${assess.partial} + ${quiz.partial} = ${classStanding}`);
+  console.groupEnd();
 
   const examPercentage = parseExamPercentage();
-  if (examPercentage === null) return;
-  const currentRaw = quantizeToMode(
-    computeCurrentRaw(classStanding, examPercentage),
-  );
+  if (examPercentage === null) {
+    console.groupEnd();
+    return;
+  }
 
-  let computedGrade = quantizeFinalToMode(currentRaw);
+  console.group("[Exam]");
+  console.log("Transmuted exam percentage:", examPercentage);
+  console.groupEnd();
+
+  const currentRaw = roundTo2(computeCurrentRaw(classStanding, examPercentage));
+  const standingHalf = roundTo2(0.5 * classStanding);
+  const examHalf = roundTo2(0.5 * examPercentage);
+
+  console.group("[Current Raw Grade]");
+  console.log(
+    `Class standing contribution: 0.5 * ${classStanding} = ${standingHalf}`,
+  );
+  console.log(`Exam contribution: 0.5 * ${examPercentage} = ${examHalf}`);
+  console.log(`Current raw: ${standingHalf} + ${examHalf} = ${currentRaw}`);
+  console.groupEnd();
+
+  let computedGrade = truncateTo2(currentRaw);
   let previousGrade = null;
   if (selectedPeriod !== "prelim") {
     const previousLabel = selectedPeriod === "midterm" ? "Prelim" : "Midterm";
@@ -303,14 +351,34 @@ const calcAll = () => {
         `Invalid ${previousLabel} Grade`,
         `Please enter a valid numeric value for ${previousLabel} grade.`,
       );
+      console.groupEnd();
       return;
     }
 
-    computedGrade = quantizeFinalToMode(
+    const prevPart = truncateTo2(previousGrade / 3);
+    const currentPart = truncateTo2((2 * currentRaw) / 3);
+    computedGrade = truncateTo2(
       computeTermGrade(selectedPeriod, currentRaw, previousGrade),
     );
+
+    console.group(`[${termLabels[selectedPeriod]} Grade]`);
+    console.log(`Previous grade part: ${previousGrade} / 3 = ${prevPart}`);
+    console.log(`Current raw part: (2 * ${currentRaw}) / 3 = ${currentPart}`);
+    console.log(
+      `Computed term grade: ${prevPart} + ${currentPart} = ${computedGrade}`,
+    );
+    console.groupEnd();
+  } else {
+    console.group("[Prelim Grade]");
+    console.log(`Computed prelim grade: ${computedGrade}`);
+    console.groupEnd();
   }
   const equivalentGrade = getEquivalentGrade(computedGrade);
+
+  console.group("[Equivalent Grade]");
+  console.log(`From ${computedGrade}% -> ${equivalentGrade}`);
+  console.groupEnd();
+  console.groupEnd();
 
   // create Bootstrap card element to show the result
   const card = document.createElement("div");
@@ -337,7 +405,6 @@ const clearAll = () => {
     .forEach((input) => (input.value = ""));
 
   if ($("gradingPeriodSelect")) $("gradingPeriodSelect").value = "prelim";
-  if ($("roundingModeSelect")) $("roundingModeSelect").value = "round";
 
   $("results")?.replaceChildren();
   updatePreviousGradeUI();
@@ -374,9 +441,19 @@ const applyParsedRowsToSection = (section, parsedRows) => {
   const scoreSelector = isQuiz ? ".quiz-score" : ".assessment-score";
   const outOfSelector = isQuiz ? ".quiz-outof" : ".assessment-outof";
   const existingRows = Array.from(document.querySelectorAll(rowSelector));
-  const startIndex = existingRows.length;
+  let startIndex = existingRows.findIndex((row) => {
+    const scoreVal = row.querySelector(scoreSelector)?.value.trim() || "";
+    const outOfVal = row.querySelector(outOfSelector)?.value.trim() || "";
+    return scoreVal === "" && outOfVal === "";
+  });
 
-  ensureSectionAdditionalRows(section, parsedRows.length);
+  if (startIndex === -1) {
+    startIndex = existingRows.length;
+  }
+
+  const neededRows = startIndex + parsedRows.length;
+  const additionalCount = Math.max(0, neededRows - existingRows.length);
+  ensureSectionAdditionalRows(section, additionalCount);
 
   const rows = Array.from(document.querySelectorAll(rowSelector));
 
@@ -452,9 +529,6 @@ $("parseQuizBtn")?.addEventListener("click", () => openParseModal("quiz"));
 $("parseRowsSubmitBtn")?.addEventListener("click", onParseSubmit);
 $("calculateBtn").addEventListener("click", calcAll);
 $("clearBtn")?.addEventListener("click", clearAll);
-$("roundingModeSelect")?.addEventListener("change", () => {
-  if ($("results")?.children.length) calcAll();
-});
 $("gradingPeriodSelect").addEventListener("change", updatePreviousGradeUI);
 $("formsContainer").addEventListener("click", removeRow);
 $("quizFormsContainer").addEventListener("click", removeRow);

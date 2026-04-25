@@ -68,7 +68,18 @@
                 <div
                   class="d-flex justify-content-between align-items-center mb-2"
                 >
-                  <h2 class="mb-0">Assessment Tasks</h2>
+                  <div class="d-flex align-items-center gap-2">
+                    <h2 class="mb-0">Assessment Tasks</h2>
+                    <button
+                      type="button"
+                      class="btn btn-link p-0 text-decoration-none"
+                      data-bs-toggle="modal"
+                      data-bs-target="#assessmentTasksHelpModal"
+                      aria-label="Show assessment tasks help"
+                    >
+                      ?
+                    </button>
+                  </div>
                   <button
                     id="parseAssessmentBtn"
                     class="btn btn-outline-primary btn-sm"
@@ -267,6 +278,62 @@
 
     <div
       class="modal fade"
+      id="assessmentTasksHelpModal"
+      tabindex="-1"
+      aria-labelledby="assessmentTasksHelpModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-dark">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="assessmentTasksHelpModalLabel">
+              Assessment Tasks Help
+            </h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            If your course has multiple assessment tasks (e.g. Homework, Lab,
+            Project), you can paste it all here and we will parse it for you.
+
+            <img
+              src="assets/img/assessment_task_help.png"
+              alt="Guide showing which table rows to copy for parsing assessment tasks"
+              class="img-fluid rounded"
+              style="
+                max-height: 80vh;
+                width: auto;
+                margin-top: 2rem;
+                margin-bottom: 2rem;
+              "
+            />
+
+            For example, if you have different components, copy all of them
+            together and add the percentage for the entire assessment (since
+            this image have 30% for attendance/assignment and 10% for
+            discussion/recitation, I will add them together to make it 40%). If
+            you only have one component, just copy that one.
+            <br />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
       id="parseRowsModal"
       tabindex="-1"
       aria-labelledby="parseRowsModalLabel"
@@ -299,7 +366,7 @@
                 data-bs-target="#parseTooltipImageModal"
                 aria-label="Show parse guide image"
               >
-                ( ? )
+                ?
               </button>
             </p>
             <textarea

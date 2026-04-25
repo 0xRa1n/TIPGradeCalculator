@@ -65,7 +65,18 @@
           <div class="card">
             <div class="card-body">
               <div id="formsContainer">
-                <h2>Assessment Tasks</h2>
+                <div
+                  class="d-flex justify-content-between align-items-center mb-2"
+                >
+                  <h2 class="mb-0">Assessment Tasks</h2>
+                  <button
+                    id="parseAssessmentBtn"
+                    class="btn btn-outline-primary btn-sm"
+                    type="button"
+                  >
+                    Paste & Parse
+                  </button>
+                </div>
                 <div class="form-floating mb-3">
                   <input
                     type="number"
@@ -111,7 +122,18 @@
           <div class="card mt-4">
             <div class="card-body">
               <div id="quizFormsContainer">
-                <h2>Quiz</h2>
+                <div
+                  class="d-flex justify-content-between align-items-center mb-2"
+                >
+                  <h2 class="mb-0">Quiz</h2>
+                  <button
+                    id="parseQuizBtn"
+                    class="btn btn-outline-primary btn-sm"
+                    type="button"
+                  >
+                    Paste & Parse
+                  </button>
+                </div>
                 <div class="form-floating mb-3">
                   <input
                     type="number"
@@ -238,6 +260,109 @@
             >
               Close
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="parseRowsModal"
+      tabindex="-1"
+      aria-labelledby="parseRowsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content text-dark">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="parseRowsModalLabel">
+              Paste Rows To Parse
+            </h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2" id="parseRowsModalHelp">
+              <span id="parseRowsModalHelpText"
+                >Paste copied table rows here. We will extract No. of Items and
+                Raw Score. Note that the pasted text should only contain the
+                rows of the table, not the headers.</span
+              >
+              <button
+                type="button"
+                class="btn btn-link p-0 align-baseline ms-1"
+                data-bs-toggle="modal"
+                data-bs-target="#parseTooltipImageModal"
+                aria-label="Show parse guide image"
+              >
+                ( ? )
+              </button>
+            </p>
+            <textarea
+              id="parseRowsTextInput"
+              class="form-control"
+              rows="10"
+              placeholder="Paste your copied table text here..."
+            ></textarea>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="parseRowsSubmitBtn"
+            >
+              Parse
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="parseTooltipImageModal"
+      tabindex="-1"
+      aria-labelledby="parseTooltipImageModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content text-dark">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="parseTooltipImageModalLabel">
+              Parse Guide
+            </h1>
+
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body text-center">
+            <h6>
+              Only copy the data rows, not including the header. Additionally,
+              should you only copy a particular part (e.g. assessment task) for
+              it to add all the entries for a particular activity (e.g.
+              assessment)
+            </h6>
+            <img
+              src="assets/img/tooltip.png"
+              alt="Guide showing which table rows to copy for parsing"
+              class="img-fluid rounded"
+              style="max-height: 80vh; width: auto"
+            />
           </div>
         </div>
       </div>

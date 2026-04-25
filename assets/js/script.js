@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 let formCount = 1,
   quizFormCount = 1;
+let parseTargetSection = "assessment";
 
 const showErrorModal = (title, content) => {
   if (
@@ -342,8 +343,119 @@ const clearAll = () => {
   updatePreviousGradeUI();
 };
 
+const openParseModal = (section) => {
+  const modalEl = $("parseRowsModal");
+  const helpTextEl = $("parseRowsModalHelpText");
+  const textInput = $("parseRowsTextInput");
+  if (!modalEl || !helpTextEl || !textInput) return;
+
+  parseTargetSection = section;
+  helpTextEl.textContent =
+    section === "assessment"
+      ? "Paste Assessment rows here. We will extract No. of Items and Raw Score into Assessment fields."
+      : "Paste Quiz rows here. We will extract No. of Items and Raw Score into Quiz fields.";
+  textInput.value = "";
+  bootstrap.Modal.getOrCreateInstance(modalEl).show();
+};
+
+const ensureSectionRowCount = (section, count) => {
+  const isQuiz = section === "quiz";
+  const rowSelector = isQuiz ? ".quiz-row" : ".assessment-row";
+  const rows = document.querySelectorAll(rowSelector);
+
+  if (rows.length < count) {
+    for (let i = rows.length; i < count; i += 1) {
+      addForm(isQuiz);
+    }
+  }
+
+  const updatedRows = Array.from(document.querySelectorAll(rowSelector));
+  if (updatedRows.length > count) {
+    updatedRows.slice(count).forEach((row) => row.remove());
+  }
+};
+
+const applyParsedRowsToSection = (section, parsedRows) => {
+  if (!Array.isArray(parsedRows) || !parsedRows.length) return;
+
+  ensureSectionRowCount(section, parsedRows.length);
+
+  const isQuiz = section === "quiz";
+  const rowSelector = isQuiz ? ".quiz-row" : ".assessment-row";
+  const scoreSelector = isQuiz ? ".quiz-score" : ".assessment-score";
+  const outOfSelector = isQuiz ? ".quiz-outof" : ".assessment-outof";
+  const rows = Array.from(document.querySelectorAll(rowSelector));
+
+  parsedRows.forEach((entry, index) => {
+    const row = rows[index];
+    if (!row) return;
+    const scoreInput = row.querySelector(scoreSelector);
+    const outOfInput = row.querySelector(outOfSelector);
+    if (scoreInput) scoreInput.value = entry.rawScore;
+    if (outOfInput) outOfInput.value = entry.noOfItems;
+  });
+};
+
+const onParseSubmit = () => {
+  const textInput = $("parseRowsTextInput");
+  const modalEl = $("parseRowsModal");
+  if (!textInput || !modalEl) return;
+
+  const rawText = textInput.value.trim();
+  if (!rawText) {
+    showErrorModal(
+      "Empty Parse Input",
+      "Please paste table rows before parsing.",
+    );
+    return;
+  }
+
+  const parsed = extractItemsAndRawScores(rawText);
+  if (!parsed.rows.length) {
+    showErrorModal(
+      "No Rows Parsed",
+      "No valid rows were found. Please paste the full copied rows from your table.",
+    );
+    return;
+  }
+
+  applyParsedRowsToSection(parseTargetSection, parsed.rows);
+  bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+};
+
+const extractItemsAndRawScores = (inputText) => {
+  const rows = [];
+
+  // Match each row block:
+  // 1) row header line (starts with N) and any label text
+  // 2) No. of Items
+  // 3) Raw Score
+  // 4) Percentage (captured but not returned)
+  const rowPattern =
+    /(\d+\)\s*[^\n]*\n\s*([0-9]+(?:\.[0-9]+)?)\s*\n\s*([0-9]+(?:\.[0-9]+)?)\s*\n\s*([0-9]+(?:\.[0-9]+)?))/g;
+
+  let match;
+  while ((match = rowPattern.exec(inputText)) !== null) {
+    rows.push({
+      noOfItems: Number(match[2]),
+      rawScore: Number(match[3]),
+    });
+  }
+
+  return {
+    rows,
+    noOfItems: rows.map((r) => r.noOfItems),
+    rawScores: rows.map((r) => r.rawScore),
+  };
+};
+
 $("addFormBtn").addEventListener("click", () => addForm(false));
 $("addQuizFormBtn").addEventListener("click", () => addForm(true));
+$("parseAssessmentBtn")?.addEventListener("click", () =>
+  openParseModal("assessment"),
+);
+$("parseQuizBtn")?.addEventListener("click", () => openParseModal("quiz"));
+$("parseRowsSubmitBtn")?.addEventListener("click", onParseSubmit);
 $("calculateBtn").addEventListener("click", calcAll);
 $("clearBtn")?.addEventListener("click", clearAll);
 $("roundingModeSelect")?.addEventListener("change", () => {

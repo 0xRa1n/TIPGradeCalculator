@@ -51,6 +51,28 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-floating">
+                    <select
+                      class="form-select"
+                      id="classStandingInputModeSelect"
+                    >
+                      <option value="auto" selected>
+                        Auto (Assessment + Quiz)
+                      </option>
+                      <option value="direct">
+                        Use LMS Class Standing Percentage
+                      </option>
+                    </select>
+                    <label for="classStandingInputModeSelect"
+                      >Class Standing Input Mode</label
+                    >
+                  </div>
+                  <div class="form-text">
+                    Auto uses Assessment + Quiz inputs. Direct uses your LMS
+                    Class Standing percentage.
+                  </div>
+                </div>
+                <div class="col-md-6 d-none" id="classStandingDirectWrap">
+                  <div class="form-floating">
                     <input
                       type="number"
                       class="form-control"
@@ -58,11 +80,90 @@
                       placeholder="0"
                     />
                     <label for="classStandingDirectInput"
-                      >LMS Class Standing % (Optional)</label
+                      >LMS Class Standing %</label
                     >
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-body">
+              <div
+                class="d-flex justify-content-between align-items-center mb-2"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <h2 class="mb-0">Merge Components Helper (Optional)</h2>
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 text-decoration-none"
+                    data-bs-toggle="modal"
+                    data-bs-target="#mergeComponentsHelpModal"
+                    aria-label="Show merge components help"
+                  >
+                    ?
+                  </button>
+                </div>
+                <button
+                  id="parseMergeComponentsBtn"
+                  class="btn btn-outline-primary btn-sm"
+                  type="button"
+                >
+                  Paste & Parse
+                </button>
+              </div>
+              <p class="text-muted mb-3 small">
+                Use this when combining multiple LMS components (e.g. Lab,
+                Seatwork, Project) into one Assessment bucket.
+              </p>
+              <div id="mergeComponentsContainer">
+                <div class="merge-component-row row g-3 mb-3">
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <input
+                        type="number"
+                        class="form-control merge-component-percentage"
+                        id="mergeComponentPercentageInput1"
+                        placeholder="0"
+                      />
+                      <label for="mergeComponentPercentageInput1"
+                        >Component Percentage</label
+                      >
+                    </div>
+                  </div>
+                  <div class="col-md-6 d-flex align-items-center gap-2">
+                    <div class="form-floating flex-grow-1">
+                      <input
+                        type="number"
+                        class="form-control merge-component-weight"
+                        id="mergeComponentWeightInput1"
+                        placeholder="0"
+                      />
+                      <label for="mergeComponentWeightInput1"
+                        >Component Weight (%)</label
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-end gap-2">
+                <button
+                  id="addMergeComponentBtn"
+                  class="btn btn-outline-primary"
+                  type="button"
+                >
+                  Add Component
+                </button>
+                <button
+                  id="applyMergedAssessmentBtn"
+                  class="btn btn-primary"
+                  type="button"
+                >
+                  Apply To Assessment
+                </button>
+              </div>
+              <div id="mergeHelperResult" class="small text-muted mt-2"></div>
             </div>
           </div>
 
@@ -72,18 +173,8 @@
                 <div
                   class="d-flex justify-content-between align-items-center mb-2"
                 >
-                  <div class="d-flex align-items-center gap-2">
-                    <h2 class="mb-0">Assessment Tasks</h2>
-                    <button
-                      type="button"
-                      class="btn btn-link p-0 text-decoration-none"
-                      data-bs-toggle="modal"
-                      data-bs-target="#assessmentTasksHelpModal"
-                      aria-label="Show assessment tasks help"
-                    >
-                      ?
-                    </button>
-                  </div>
+                  <h2 class="mb-0">Assessment Tasks</h2>
+
                   <button
                     id="parseAssessmentBtn"
                     class="btn btn-outline-primary btn-sm"
@@ -209,6 +300,10 @@
                       </select>
                       <label for="examInputModeSelect">Exam Input Mode</label>
                     </div>
+                    <div class="form-text">
+                      Auto computes from Exam score rows. Direct uses your LMS
+                      Exam percentage.
+                    </div>
                   </div>
                   <div class="col-md-6 d-none" id="examDirectWrap">
                     <div class="form-floating">
@@ -328,16 +423,16 @@
 
     <div
       class="modal fade"
-      id="assessmentTasksHelpModal"
+      id="mergeComponentsHelpModal"
       tabindex="-1"
-      aria-labelledby="assessmentTasksHelpModalLabel"
+      aria-labelledby="mergeComponentsHelpModalLabel"
       aria-hidden="true"
     >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content text-dark">
           <div class="modal-header">
-            <h1 class="modal-title fs-5" id="assessmentTasksHelpModalLabel">
-              Assessment Tasks Help
+            <h1 class="modal-title fs-5" id="mergeComponentsHelpModalLabel">
+              Merge Components Help
             </h1>
             <button
               type="button"
@@ -347,26 +442,27 @@
             ></button>
           </div>
           <div class="modal-body">
-            If your course has multiple assessment tasks (e.g. Homework, Lab,
-            Project), you can paste it all here and we will parse it for you.
-
+            If your course has multiple components that are merged into one
+            grade (e.g. Lab, Seatwork, Project all merged into one Assessment
+            grade), you can use this helper to calculate the combined percentage
+            for that grade.
+            <br />
+            <br />
+            Note that the component weight is the percentage contribution, and
+            the component percentage is the overrall percentage you got for that
+            component. For example, if your Lab grade contributes 35% to your
+            overall Assessment grade, and you got an 90% for Lab, you would put
+            35 for the weight and 90 for the percentage.<br />
             <img
-              src="assets/img/assessment_task_help.png"
-              alt="Guide showing which table rows to copy for parsing assessment tasks"
-              class="img-fluid rounded"
-              style="
-                max-height: 80vh;
-                width: auto;
-                margin-top: 2rem;
-                margin-bottom: 2rem;
-              "
+              src="assets/img/percentage_1.png"
+              alt="Example of using the merge components helper"
+              class="img-fluid rounded my-3"
             />
-
-            For example, if you have different components, copy all of them
-            together and add the percentage for the entire assessment (since
-            this image have 30% for attendance/assignment and 10% for
-            discussion/recitation, I will add them together to make it 40%). If
-            you only have one component, just copy that one.
+            <img
+              src="assets/img/percentage_2.png"
+              alt="Example of using the merge components helper"
+              class="img-fluid rounded my-3"
+            />
             <br />
           </div>
           <div class="modal-footer">

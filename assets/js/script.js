@@ -1,7 +1,8 @@
 const $ = (id) => document.getElementById(id);
 let formCount = 1,
   quizFormCount = 1,
-  examFormCount = 1;
+  examFormCount = 1,
+  mergeComponentFormCount = 1;
 let parseTargetSection = "assessment";
 
 const showErrorModal = (title, content) => {
@@ -103,6 +104,18 @@ const updatePreviousGradeUI = () => {
 const updateExamInputModeUI = () => {
   const modeSelect = $("examInputModeSelect");
   const directWrap = $("examDirectWrap");
+  if (!modeSelect || !directWrap) return;
+
+  if (modeSelect.value === "direct") {
+    directWrap.classList.remove("d-none");
+  } else {
+    directWrap.classList.add("d-none");
+  }
+};
+
+const updateClassStandingInputModeUI = () => {
+  const modeSelect = $("classStandingInputModeSelect");
+  const directWrap = $("classStandingDirectWrap");
   if (!modeSelect || !directWrap) return;
 
   if (modeSelect.value === "direct") {
@@ -273,6 +286,141 @@ const addExamForm = () => {
   container.insertAdjacentHTML("beforeend", html);
 };
 
+const addMergeComponentForm = () => {
+  const c = ++mergeComponentFormCount;
+  const container = $("mergeComponentsContainer");
+  const html = `
+    <div class="merge-component-row row g-3 mb-3 position-relative">
+      <div class="col-md-6">
+        <div class="form-floating">
+          <input type="number" class="form-control merge-component-percentage" id="mergeComponentPercentageInput${c}" placeholder="0"/>
+          <label for="mergeComponentPercentageInput${c}">Component Percentage</label>
+        </div>
+      </div>
+      <div class="col-md-6 d-flex align-items-center gap-2">
+        <div class="form-floating flex-grow-1">
+          <input type="number" class="form-control merge-component-weight" id="mergeComponentWeightInput${c}" placeholder="0"/>
+          <label for="mergeComponentWeightInput${c}">Component Weight (%)</label>
+        </div>
+        <button
+          type="button"
+          class="remove-row-btn btn btn-link text-danger text-decoration-none p-0"
+          aria-label="Remove merge component entry"
+          style="font-size:1rem;line-height:1;"
+        >
+          X
+        </button>
+      </div>
+    </div>`;
+  container.insertAdjacentHTML("beforeend", html);
+};
+
+const getMergedAssessmentFromComponents = () => {
+  const rows = Array.from(document.querySelectorAll(".merge-component-row"));
+  const vals = rows
+    .map((row) => {
+      const percentage =
+        row.querySelector(".merge-component-percentage")?.value.trim() || "";
+      const weight =
+        row.querySelector(".merge-component-weight")?.value.trim() || "";
+      return percentage !== "" || weight !== "" ? { percentage, weight } : null;
+    })
+    .filter(Boolean);
+
+  if (!vals.length) {
+    showErrorModal(
+      "Missing Merge Entries",
+      "Please enter at least one Component Percentage and Weight pair.",
+    );
+    return null;
+  }
+
+  const parsedVals = [];
+  for (const [index, v] of vals.entries()) {
+    if (v.percentage === "" || v.weight === "") {
+      showErrorModal(
+        "Incomplete Merge Entry",
+        `Merge row ${index + 1} must have both Component Percentage and Weight values.`,
+      );
+      return null;
+    }
+
+    const percentage = Number(v.percentage);
+    const weight = Number(v.weight);
+
+    if (
+      Number.isNaN(percentage) ||
+      Number.isNaN(weight) ||
+      percentage < 0 ||
+      percentage > 100 ||
+      weight <= 0
+    ) {
+      showErrorModal(
+        "Invalid Merge Entry",
+        `Merge row ${index + 1} must have Percentage between 0 and 100 and Weight greater than 0.`,
+      );
+      return null;
+    }
+
+    parsedVals.push({ percentage, weight });
+  }
+
+  const totalWeight = roundTo2(
+    parsedVals.reduce((sum, entry) => sum + entry.weight, 0),
+  );
+
+  const weightedPercentage = roundTo2(
+    parsedVals.reduce(
+      (sum, entry) => sum + entry.percentage * entry.weight,
+      0,
+    ) / totalWeight,
+  );
+
+  // Grade transmutation in this tool maps raw 0-100 to percentage 50-100.
+  // Convert target merged percentage back to a synthetic raw score over 100.
+  const syntheticScore = roundTo2((weightedPercentage - 50) * 2);
+  if (syntheticScore < 0 || syntheticScore > 100) {
+    showErrorModal(
+      "Unsupported Merge Result",
+      "Merged percentage is outside the supported transmutation range (50 to 100).",
+    );
+    return null;
+  }
+
+  return {
+    totalWeight,
+    weightedPercentage,
+    syntheticScore,
+    syntheticOutOf: 100,
+  };
+};
+
+const applyMergedAssessment = () => {
+  const merged = getMergedAssessmentFromComponents();
+  if (!merged) return;
+
+  if ($("floatingInput")) $("floatingInput").value = String(merged.totalWeight);
+
+  document.querySelectorAll(".assessment-row").forEach((row, index) => {
+    if (index > 0) row.remove();
+  });
+  formCount = 1;
+
+  const scoreInput = document.querySelector(
+    ".assessment-row .assessment-score",
+  );
+  const outOfInput = document.querySelector(
+    ".assessment-row .assessment-outof",
+  );
+  if (scoreInput) scoreInput.value = String(merged.syntheticScore);
+  if (outOfInput) outOfInput.value = String(merged.syntheticOutOf);
+
+  if ($("mergeHelperResult")) {
+    $("mergeHelperResult").textContent =
+      `Applied merged Assessment: ${fmt2(merged.weightedPercentage)}% at ${fmt2(merged.totalWeight)}% weight (synthetic row ${fmt2(merged.syntheticScore)}/${fmt2(merged.syntheticOutOf)}).`;
+  }
+};
+
 const addForm = (isQuiz = false) => {
   const c = isQuiz ? ++quizFormCount : ++formCount;
   const type = isQuiz ? "quiz" : "assessment";
@@ -307,7 +455,9 @@ const removeRow = (event) => {
   const btn = event.target.closest(".remove-row-btn");
   if (!btn) return;
 
-  const row = btn.closest(".assessment-row, .quiz-row, .exam-row");
+  const row = btn.closest(
+    ".assessment-row, .quiz-row, .exam-row, .merge-component-row",
+  );
   if (row) row.remove();
 };
 
@@ -392,9 +542,9 @@ const calcSection = ({
     parsedVals.push({ score, outOf });
   }
 
-  const totalScore = parsedVals.reduce((sum, v) => sum + v.score, 0);
-  const totalOutOf = parsedVals.reduce((sum, v) => sum + v.outOf, 0);
-  const avg = roundTo2((totalScore / totalOutOf) * 50 + 50);
+  const percs = parsedVals.map((v) => roundTo2((v.score / v.outOf) * 50 + 50));
+  const sumCents = percs.reduce((sum, val) => sum + Math.round(val * 100), 0);
+  const avg = roundTo2(sumCents / percs.length / 100);
 
   const partial = roundTo2(avg * norm);
   return {
@@ -406,33 +556,50 @@ const calcSection = ({
 const calcAll = () => {
   const selectedPeriod = $("gradingPeriodSelect")?.value || "prelim";
 
-  const assess = calcSection({
-    section: "Assessment Tasks",
-    container: $("formsContainer"),
-    percentSel: "#floatingInput",
-    rowSel: ".assessment-row",
-    scoreSel: ".assessment-score",
-    outOfSel: ".assessment-outof",
-  });
-  if (!assess) return;
-  const quiz = calcSection({
-    section: "Quiz",
-    container: $("quizFormsContainer"),
-    percentSel: "#floatingQuizInput",
-    rowSel: ".quiz-row",
-    scoreSel: ".quiz-score",
-    outOfSel: ".quiz-outof",
-  });
-  if (!quiz) return;
+  const classStandingMode = $("classStandingInputModeSelect")?.value || "auto";
 
-  const autoClassStanding = roundTo2(assess.partial + quiz.partial);
+  let assess = { partial: 0 };
+  let quiz = { partial: 0 };
+  let autoClassStanding = 0;
+
+  if (classStandingMode === "auto") {
+    assess = calcSection({
+      section: "Assessment Tasks",
+      container: $("formsContainer"),
+      percentSel: "#floatingInput",
+      rowSel: ".assessment-row",
+      scoreSel: ".assessment-score",
+      outOfSel: ".assessment-outof",
+    });
+    if (!assess) return;
+    quiz = calcSection({
+      section: "Quiz",
+      container: $("quizFormsContainer"),
+      percentSel: "#floatingQuizInput",
+      rowSel: ".quiz-row",
+      scoreSel: ".quiz-score",
+      outOfSel: ".quiz-outof",
+    });
+    if (!quiz) return;
+
+    autoClassStanding = roundTo2(assess.partial + quiz.partial);
+  }
+
   const directClassStandingInput =
     $("classStandingDirectInput")?.value.trim() || "";
 
-  let classStanding = autoClassStanding;
+  let classStanding = classStandingMode === "auto" ? autoClassStanding : 0;
   let usedClassStandingOverride = false;
 
-  if (directClassStandingInput !== "") {
+  if (classStandingMode === "direct") {
+    if (directClassStandingInput === "") {
+      showErrorModal(
+        "Missing LMS Class Standing",
+        "Please enter the LMS Class Standing % value.",
+      );
+      return;
+    }
+
     const directClassStanding = Number(directClassStandingInput);
     if (
       Number.isNaN(directClassStanding) ||
@@ -448,6 +615,12 @@ const calcAll = () => {
 
     classStanding = roundTo2(directClassStanding);
     usedClassStandingOverride = true;
+  } else if (directClassStandingInput !== "") {
+    const directClassStanding = Number(directClassStandingInput);
+    if (!Number.isNaN(directClassStanding)) {
+      classStanding = roundTo2(directClassStanding);
+      usedClassStandingOverride = true;
+    }
   }
 
   const examPercentage = parseExamPercentage();
@@ -506,18 +679,27 @@ const clearAll = () => {
   document.querySelectorAll(".exam-row").forEach((row, index) => {
     if (index > 0) row.remove();
   });
+  document.querySelectorAll(".merge-component-row").forEach((row, index) => {
+    if (index > 0) row.remove();
+  });
 
   formCount = 1;
   quizFormCount = 1;
   examFormCount = 1;
+  mergeComponentFormCount = 1;
 
   document
     .querySelectorAll('input[type="number"]')
     .forEach((input) => (input.value = ""));
 
   if ($("gradingPeriodSelect")) $("gradingPeriodSelect").value = "prelim";
+  if ($("classStandingInputModeSelect")) {
+    $("classStandingInputModeSelect").value = "auto";
+  }
   if ($("examInputModeSelect")) $("examInputModeSelect").value = "auto";
+  updateClassStandingInputModeUI();
   updateExamInputModeUI();
+  if ($("mergeHelperResult")) $("mergeHelperResult").textContent = "";
 
   $("results")?.replaceChildren();
   updatePreviousGradeUI();
@@ -533,7 +715,9 @@ const openParseModal = (section) => {
   helpTextEl.textContent =
     section === "assessment"
       ? "Paste Assessment rows here. We will extract No. of Items and Raw Score into Assessment fields."
-      : "Paste Quiz rows here. We will extract No. of Items and Raw Score into Quiz fields.";
+      : section === "quiz"
+        ? "Paste Quiz rows here. We will extract No. of Items and Raw Score into Quiz fields."
+        : "Paste component summary rows here (e.g. Component @35.00% ... 90.00). We will extract Component Percentage and Component Weight into Merge Components Helper.";
   textInput.value = "";
   bootstrap.Modal.getOrCreateInstance(modalEl).show();
 };
@@ -580,6 +764,44 @@ const applyParsedRowsToSection = (section, parsedRows) => {
   });
 };
 
+const ensureMergeComponentAdditionalRows = (additionalCount) => {
+  for (let i = 0; i < additionalCount; i += 1) {
+    addMergeComponentForm();
+  }
+};
+
+const applyParsedMergeComponents = (parsedRows) => {
+  if (!Array.isArray(parsedRows) || !parsedRows.length) return;
+
+  const rowSelector = ".merge-component-row";
+  const existingRows = Array.from(document.querySelectorAll(rowSelector));
+  let startIndex = existingRows.findIndex((row) => {
+    const percentageVal =
+      row.querySelector(".merge-component-percentage")?.value.trim() || "";
+    const weightVal =
+      row.querySelector(".merge-component-weight")?.value.trim() || "";
+    return percentageVal === "" && weightVal === "";
+  });
+
+  if (startIndex === -1) {
+    startIndex = existingRows.length;
+  }
+
+  const neededRows = startIndex + parsedRows.length;
+  const additionalCount = Math.max(0, neededRows - existingRows.length);
+  ensureMergeComponentAdditionalRows(additionalCount);
+
+  const rows = Array.from(document.querySelectorAll(rowSelector));
+  parsedRows.forEach((entry, index) => {
+    const row = rows[startIndex + index];
+    if (!row) return;
+    const percentageInput = row.querySelector(".merge-component-percentage");
+    const weightInput = row.querySelector(".merge-component-weight");
+    if (percentageInput) percentageInput.value = entry.componentPercentage;
+    if (weightInput) weightInput.value = entry.componentWeight;
+  });
+};
+
 const onParseSubmit = () => {
   const textInput = $("parseRowsTextInput");
   const modalEl = $("parseRowsModal");
@@ -594,17 +816,75 @@ const onParseSubmit = () => {
     return;
   }
 
-  const parsed = extractItemsAndRawScores(rawText);
-  if (!parsed.rows.length) {
-    showErrorModal(
-      "No Rows Parsed",
-      "No valid rows were found. Please paste the full copied rows from your table.",
+  if (parseTargetSection === "merge") {
+    const parsedMerge = extractMergedComponentSummary(rawText);
+    if (!parsedMerge.rows.length) {
+      showErrorModal(
+        "No Rows Parsed",
+        "No valid component summary rows were found. Please paste rows that include values like '@35.00%' and the component percentage (e.g. 90.00).",
+      );
+      return;
+    }
+    applyParsedMergeComponents(parsedMerge.rows);
+  } else {
+    const parsed = extractItemsAndRawScores(rawText);
+    if (!parsed.rows.length) {
+      showErrorModal(
+        "No Rows Parsed",
+        "No valid rows were found. Please paste the full copied rows from your table.",
+      );
+      return;
+    }
+
+    applyParsedRowsToSection(parseTargetSection, parsed.rows);
+  }
+  bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+};
+
+const extractMergedComponentSummary = (inputText) => {
+  const rows = [];
+  const lines = inputText.split(/\r?\n/);
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i].trim();
+    if (!line || !line.includes("@") || !line.includes("%")) continue;
+
+    const weightMatch = line.match(/@\s*([0-9]+(?:\.[0-9]+)?)\s*%/);
+    if (!weightMatch) continue;
+
+    const componentWeight = Number(weightMatch[1]);
+    if (!Number.isFinite(componentWeight) || componentWeight <= 0) continue;
+
+    let componentPercentage = null;
+
+    const afterWeightText = line.slice(
+      (weightMatch.index || 0) + weightMatch[0].length,
     );
-    return;
+    const numbersAfterWeight = afterWeightText.match(/[0-9]+(?:\.[0-9]+)?/g);
+    if (numbersAfterWeight?.length) {
+      componentPercentage = Number(
+        numbersAfterWeight[numbersAfterWeight.length - 1],
+      );
+    } else {
+      const nextLine = lines[i + 1]?.trim() || "";
+      if (/^[0-9]+(?:\.[0-9]+)?$/.test(nextLine)) {
+        componentPercentage = Number(nextLine);
+      }
+    }
+
+    if (
+      Number.isFinite(componentPercentage) &&
+      componentPercentage >= 0 &&
+      componentPercentage <= 100
+    ) {
+      rows.push({
+        componentPercentage: roundTo2(componentPercentage),
+        componentWeight: roundTo2(componentWeight),
+      });
+    }
   }
 
-  applyParsedRowsToSection(parseTargetSection, parsed.rows);
-  bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+  return { rows };
 };
 
 const extractItemsAndRawScores = (inputText) => {
@@ -636,6 +916,11 @@ const extractItemsAndRawScores = (inputText) => {
 $("addFormBtn").addEventListener("click", () => addForm(false));
 $("addQuizFormBtn").addEventListener("click", () => addForm(true));
 $("addExamFormBtn")?.addEventListener("click", addExamForm);
+$("addMergeComponentBtn")?.addEventListener("click", addMergeComponentForm);
+$("applyMergedAssessmentBtn")?.addEventListener("click", applyMergedAssessment);
+$("parseMergeComponentsBtn")?.addEventListener("click", () =>
+  openParseModal("merge"),
+);
 $("parseAssessmentBtn")?.addEventListener("click", () =>
   openParseModal("assessment"),
 );
@@ -644,9 +929,15 @@ $("parseRowsSubmitBtn")?.addEventListener("click", onParseSubmit);
 $("calculateBtn").addEventListener("click", calcAll);
 $("clearBtn")?.addEventListener("click", clearAll);
 $("gradingPeriodSelect").addEventListener("change", updatePreviousGradeUI);
+$("classStandingInputModeSelect")?.addEventListener(
+  "change",
+  updateClassStandingInputModeUI,
+);
 $("examInputModeSelect")?.addEventListener("change", updateExamInputModeUI);
 $("formsContainer").addEventListener("click", removeRow);
 $("quizFormsContainer").addEventListener("click", removeRow);
 $("examFormsContainer")?.addEventListener("click", removeRow);
+$("mergeComponentsContainer")?.addEventListener("click", removeRow);
 updatePreviousGradeUI();
+updateClassStandingInputModeUI();
 updateExamInputModeUI();

@@ -15,7 +15,7 @@ const showErrorModal = (title, content) => {
 
   $("appErrorModalLabel").textContent = title;
   $("appErrorModalBody").textContent = content;
-  bootstrap.Modal.getOrCreateInstance($("appErrorModal")).show();
+  $("appErrorModal").classList.remove("hidden");
 };
 window.showErrorModal = showErrorModal;
 
@@ -92,12 +92,12 @@ const updatePreviousGradeUI = () => {
 
   const period = select.value;
   if (period === "prelim") {
-    wrap.classList.add("d-none");
+    wrap.classList.add("hidden");
     input.value = "";
     return;
   }
 
-  wrap.classList.remove("d-none");
+  wrap.classList.remove("hidden");
   label.textContent = period === "midterm" ? "Prelim Grade" : "Midterm Grade";
 };
 
@@ -107,9 +107,9 @@ const updateExamInputModeUI = () => {
   if (!modeSelect || !directWrap) return;
 
   if (modeSelect.value === "direct") {
-    directWrap.classList.remove("d-none");
+    directWrap.classList.remove("hidden");
   } else {
-    directWrap.classList.add("d-none");
+    directWrap.classList.add("hidden");
   }
 };
 
@@ -119,9 +119,9 @@ const updateClassStandingInputModeUI = () => {
   if (!modeSelect || !directWrap) return;
 
   if (modeSelect.value === "direct") {
-    directWrap.classList.remove("d-none");
+    directWrap.classList.remove("hidden");
   } else {
-    directWrap.classList.add("d-none");
+    directWrap.classList.add("hidden");
   }
 };
 
@@ -256,28 +256,28 @@ const addExamForm = () => {
   const container = $("examFormsContainer");
   const html = `
     <div class="exam-row row g-3 mb-3 position-relative">
-      <div class="col-md-4">
-        <div class="form-floating">
-          <input type="number" class="form-control exam-score" id="examScoreInput${c}" placeholder="0"/>
-          <label for="examScoreInput${c}">Score</label>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1">
+          <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-score" id="examScoreInput${c}" placeholder="0"/>
+          <label for="examScoreInput${c}" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;">Score</label>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="form-floating">
-          <input type="number" class="form-control exam-outof" id="examOutOfInput${c}" placeholder="0"/>
-          <label for="examOutOfInput${c}">Out Of</label>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1">
+          <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-outof" id="examOutOfInput${c}" placeholder="0"/>
+          <label for="examOutOfInput${c}" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;">Out Of</label>
         </div>
       </div>
       <div class="col-md-4 d-flex align-items-center gap-2">
-        <div class="form-floating flex-grow-1">
-          <input type="number" class="form-control exam-weight" id="examWeightInput${c}" placeholder="0"/>
-          <label for="examWeightInput${c}">Weight (%) Optional</label>
+        <div class="flex flex-col gap-1 flex-grow-1">
+          <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-weight" id="examWeightInput${c}" placeholder="0"/>
+          <label for="examWeightInput${c}" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;">Weight (%) Optional</label>
         </div>
         <button
           type="button"
-          class="remove-row-btn btn btn-link text-danger text-decoration-none p-0"
+          class="remove-row-btn text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full btn btn-link text-danger text-decoration-none p-0"
           aria-label="Remove exam entry"
-          style="font-size:1rem;line-height:1;"
+          
         >
           X
         </button>
@@ -291,22 +291,22 @@ const addMergeComponentForm = () => {
   const container = $("mergeComponentsContainer");
   const html = `
     <div class="merge-component-row row g-3 mb-3 position-relative">
-      <div class="col-md-6">
-        <div class="form-floating">
-          <input type="number" class="form-control merge-component-percentage" id="mergeComponentPercentageInput${c}" placeholder="0"/>
-          <label for="mergeComponentPercentageInput${c}">Component Percentage</label>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1">
+          <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all merge-component-percentage" id="mergeComponentPercentageInput${c}" placeholder="0"/>
+          <label for="mergeComponentPercentageInput${c}" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;">Component Percentage</label>
         </div>
       </div>
-      <div class="col-md-6 d-flex align-items-center gap-2">
-        <div class="form-floating flex-grow-1">
-          <input type="number" class="form-control merge-component-weight" id="mergeComponentWeightInput${c}" placeholder="0"/>
-          <label for="mergeComponentWeightInput${c}">Component Weight (%)</label>
+      <div class="flex flex-col gap-1 d-flex align-items-center gap-2">
+        <div class="flex flex-col gap-1 flex-grow-1">
+          <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all merge-component-weight" id="mergeComponentWeightInput${c}" placeholder="0"/>
+          <label for="mergeComponentWeightInput${c}" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;">Component Weight (%)</label>
         </div>
         <button
           type="button"
-          class="remove-row-btn btn btn-link text-danger text-decoration-none p-0"
+          class="remove-row-btn text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full btn btn-link text-danger text-decoration-none p-0"
           aria-label="Remove merge component entry"
-          style="font-size:1rem;line-height:1;"
+          
         >
           X
         </button>
@@ -427,22 +427,22 @@ const addForm = (isQuiz = false) => {
   const container = $(isQuiz ? "quizFormsContainer" : "formsContainer");
   const html = `
     <div class="${type}-row row g-3 mb-3 position-relative">
-      <div class="col-md-6">
-        <div class="form-floating">
-          <input type="number" class="form-control ${type}-score" id="${type}ScoreInput${c}" placeholder="0"/>
-          <label for="${type}ScoreInput${c}">${isQuiz ? "Score" : "Assessment Task Score"}</label>
+      <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1">
+          <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${type}-score" id="${type}ScoreInput${c}" placeholder="0"/>
+          <label for="${type}ScoreInput${c}" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;">${isQuiz ? "Score" : "Assessment Task Score"}</label>
         </div>
       </div>
-      <div class="col-md-6 d-flex align-items-center gap-2">
-        <div class="form-floating flex-grow-1">
-          <input type="number" class="form-control ${type}-outof" id="${type}OutOfInput${c}" placeholder="0"/>
-          <label for="${type}OutOfInput${c}">Out Of</label>
+      <div class="flex flex-col gap-1 d-flex align-items-center gap-2">
+        <div class="flex flex-col gap-1 flex-grow-1">
+          <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${type}-outof" id="${type}OutOfInput${c}" placeholder="0"/>
+          <label for="${type}OutOfInput${c}" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;" class="text-sm font-medium text-slate-300 ml-1" style="order: -1;">Out Of</label>
         </div>
         <button
           type="button"
-          class="remove-row-btn btn btn-link text-danger text-decoration-none p-0"
+          class="remove-row-btn text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg font-semibold mt-6 md:mt-0 transition-colors w-full md:w-auto h-full btn btn-link text-danger text-decoration-none p-0"
           aria-label="Remove ${isQuiz ? "quiz" : "assessment"} entry"
-          style="font-size:1rem;line-height:1;"
+          
         >
           X
         </button>
@@ -719,7 +719,7 @@ const openParseModal = (section) => {
         ? "Paste Quiz rows here. We will extract No. of Items and Raw Score into Quiz fields."
         : "Paste component summary rows here (e.g. Component @35.00% ... 90.00). We will extract Component Percentage and Component Weight into Merge Components Helper.";
   textInput.value = "";
-  bootstrap.Modal.getOrCreateInstance(modalEl).show();
+  modalEl.classList.remove("hidden");
 };
 
 const ensureSectionAdditionalRows = (section, additionalCount) => {
@@ -838,7 +838,7 @@ const onParseSubmit = () => {
 
     applyParsedRowsToSection(parseTargetSection, parsed.rows);
   }
-  bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+  modalEl.classList.add("hidden");
 };
 
 const extractMergedComponentSummary = (inputText) => {

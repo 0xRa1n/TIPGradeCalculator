@@ -1,254 +1,584 @@
-<!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Grade Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      body { background-color: #0f172a; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
+      body {
+        background-color: #0f172a;
+        color: #f8fafc;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
     </style>
   </head>
-  
+
   <body>
-    <div class="max-w-7xl mx-auto p-6 mt-8 flex flex-col xl:flex-row gap-8 items-start relative" id="container">
+    <div
+      class="max-w-7xl mx-auto p-6 mt-8 flex flex-col xl:flex-row gap-8 items-start relative"
+      id="container"
+    >
       <div class="flex-1 w-full space-y-6 shrink">
-          <h1 class="text-4xl font-extrabold mb-8 tracking-tight text-white">Grade Calculator</h1>
-          <div class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 mb-6">
-            <div class="">
-              <h2 class="text-lg font-semibold text-slate-200 mb-4">Grading Period</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h1 class="text-4xl font-extrabold mb-8 tracking-tight text-white">
+          Grade Calculator
+        </h1>
+        <div
+          class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 mb-6"
+        >
+          <div class="">
+            <h2 class="text-lg font-semibold text-slate-200 mb-4">
+              Grading Period
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="flex flex-col gap-1">
                 <div class="flex flex-col gap-1">
-                  <div class="flex flex-col gap-1">
-                    <select class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="gradingPeriodSelect">
-                      <option value="prelim" selected="">Prelim</option>
-                      <option value="midterm">Midterm</option>
-                      <option value="final">Final</option>
-                    </select>
-                    <label for="gradingPeriodSelect" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Calculate For</label>
-                  </div>
+                  <select
+                    class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    id="gradingPeriodSelect"
+                  >
+                    <option value="prelim" selected="">Prelim</option>
+                    <option value="midterm">Midterm</option>
+                    <option value="final">Final</option>
+                  </select>
+                  <label
+                    for="gradingPeriodSelect"
+                    class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                    style="order: -1"
+                    >Calculate For</label
+                  >
                 </div>
-                <div class="flex flex-col gap-1 hidden" id="previousGradeWrap">
-                  <div class="flex flex-col gap-1">
-                    <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="previousGradeInput" placeholder="0">
-                    <label for="previousGradeInput" id="previousGradeLabel" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Prelim Grade</label>
-                  </div>
-                </div>
+              </div>
+              <div class="flex flex-col gap-1 hidden" id="previousGradeWrap">
                 <div class="flex flex-col gap-1">
-                  <div class="flex flex-col gap-1">
-                    <select class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="classStandingInputModeSelect">
-                      <option value="auto" selected="">
-                        Auto (Assessment + Quiz)
-                      </option>
-                      <option value="direct">
-                        Use LMS Class Standing Percentage
-                      </option>
-                    </select>
-                    <label for="classStandingInputModeSelect" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Class Standing Input Mode</label>
-                  </div>
-                  <div class="text-xs text-slate-400 mt-1 ml-1">
-                    Auto uses Assessment + Quiz inputs. Direct uses your LMS
-                    Class Standing percentage.
-                  </div>
-                </div>
-                <div class="flex flex-col gap-1 hidden" id="classStandingDirectWrap">
-                  <div class="flex flex-col gap-1">
-                    <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="classStandingDirectInput" placeholder="0">
-                    <label for="classStandingDirectInput" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">LMS Class Standing %</label>
-                  </div>
+                  <input
+                    type="number"
+                    class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    id="previousGradeInput"
+                    placeholder="0"
+                  />
+                  <label
+                    for="previousGradeInput"
+                    id="previousGradeLabel"
+                    class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                    style="order: -1"
+                    >Prelim Grade</label
+                  >
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 mb-6">
-            <div class="">
-              <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4">
-                <div class="flex items-center gap-2">
-                  <h2 class="text-xl font-bold text-white">Merge Components Helper (Optional)</h2>
-                  <button type="button" class="text-slate-400 hover:text-white w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm transition-colors" onclick="document.getElementById('mergeComponentsHelpModal').classList.remove('hidden')" aria-label="Show merge components help">
-                    ?
-                  </button>
+              <div class="flex flex-col gap-1">
+                <div class="flex flex-col gap-1">
+                  <select
+                    class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    id="classStandingInputModeSelect"
+                  >
+                    <option value="auto" selected="">
+                      Auto (Assessment + Quiz)
+                    </option>
+                    <option value="direct">
+                      Use LMS Class Standing Percentage
+                    </option>
+                  </select>
+                  <label
+                    for="classStandingInputModeSelect"
+                    class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                    style="order: -1"
+                    >Class Standing Input Mode</label
+                  >
                 </div>
-                <button id="parseMergeComponentsBtn" class="px-3 py-1.5 border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white text-sm font-medium rounded-md transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none" type="button">
-                  Paste &amp; Parse
-                </button>
-              </div>
-              <p class="text-sm text-slate-400 mb-4">
-                Use this when combining multiple LMS components (e.g. Lab,
-                Seatwork, Project) into one Assessment bucket.
-              </p>
-              <div id="mergeComponentsContainer">
-                <div class="merge-component-row row g-3 mb-3">
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all merge-component-percentage" id="mergeComponentPercentageInput1" placeholder="0">
-                      <label for="mergeComponentPercentageInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Component Percentage</label>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1 d-flex align-items-center gap-2">
-                    <div class="form-floating flex-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all merge-component-weight" id="mergeComponentWeightInput1" placeholder="0">
-                      <label for="mergeComponentWeightInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Component Weight (%)</label>
-                    </div>
-                  </div>
+                <div class="text-xs text-slate-400 mt-1 ml-1">
+                  Auto uses Assessment + Quiz inputs. Direct uses your LMS Class
+                  Standing percentage.
                 </div>
               </div>
-              <div class="flex justify-end gap-3 mt-4">
-                <button id="addMergeComponentBtn" class="px-5 py-2.5 border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800" type="button">
-                  Add Component
-                </button>
-                <button id="applyMergedAssessmentBtn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800" type="button">
-                  Apply To Assessment
-                </button>
-              </div>
-              <div id="mergeHelperResult" class="small text-muted mt-2"></div>
-            </div>
-          </div>
-
-          <div class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6">
-            <div class="">
-              <div id="formsContainer">
-                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4">
-                  <h2 class="text-xl font-bold text-white">Assessment Tasks</h2>
-
-                  <button id="parseAssessmentBtn" class="px-3 py-1.5 border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white text-sm font-medium rounded-md transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none" type="button">
-                    Paste &amp; Parse
-                  </button>
+              <div
+                class="flex flex-col gap-1 hidden"
+                id="classStandingDirectWrap"
+              >
+                <div class="flex flex-col gap-1">
+                  <input
+                    type="number"
+                    class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    id="classStandingDirectInput"
+                    placeholder="0"
+                  />
+                  <label
+                    for="classStandingDirectInput"
+                    class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                    style="order: -1"
+                    >LMS Class Standing %</label
+                  >
                 </div>
-                <div class="flex flex-col gap-1 mb-4">
-                  <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="floatingInput" placeholder="0">
-                  <label for="floatingInput" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Percentage</label>
-                </div>
-                <div class="assessment-row row g-3 mb-3">
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all assessment-score" id="scoreInput1" placeholder="0">
-                      <label for="scoreInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Score</label>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all assessment-outof" id="outOfInput1" placeholder="0">
-                      <label for="outOfInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Out Of</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="flex justify-end mt-4">
-                <button id="addFormBtn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800" type="button">
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 mt-6">
-            <div class="">
-              <div id="quizFormsContainer">
-                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4">
-                  <h2 class="text-xl font-bold text-white">Quiz</h2>
-                  <button id="parseQuizBtn" class="px-3 py-1.5 border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white text-sm font-medium rounded-md transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none" type="button">
-                    Paste &amp; Parse
-                  </button>
-                </div>
-                <div class="flex flex-col gap-1 mb-4">
-                  <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="floatingQuizInput" placeholder="0">
-                  <label for="floatingQuizInput" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Percentage</label>
-                </div>
-                <div class="quiz-row row g-3 mb-3">
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all quiz-score" id="quizScoreInput1" placeholder="0">
-                      <label for="quizScoreInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Score</label>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all quiz-outof" id="quizOutOfInput1" placeholder="0">
-                      <label for="quizOutOfInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Out Of</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="flex justify-end mt-4">
-                <button id="addQuizFormBtn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800" type="button">
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 mt-6">
-            <div class="">
-              <div id="examFormsContainer">
-                <h2 class="text-xl font-bold text-white mb-4">Exam</h2>
-                <div class="row g-3 mb-3">
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <select class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="examInputModeSelect">
-                        <option value="auto" selected="">
-                          Auto (Score/Out Of Rows)
-                        </option>
-                        <option value="direct">Use LMS Exam Percentage</option>
-                      </select>
-                      <label for="examInputModeSelect" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Exam Input Mode</label>
-                    </div>
-                    <div class="text-xs text-slate-400 mt-1 ml-1">
-                      Auto computes from Exam score rows. Direct uses your LMS
-                      Exam percentage.
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1 hidden" id="examDirectWrap">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="examDirectPercentageInput" placeholder="0">
-                      <label for="examDirectPercentageInput" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">LMS Exam Percentage</label>
-                    </div>
-                  </div>
-                </div>
-                <div class="exam-row row g-3 mb-3">
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-score" id="examScoreInput1" placeholder="0">
-                      <label for="examScoreInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Score</label>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-outof" id="examOutOfInput1" placeholder="0">
-                      <label for="examOutOfInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Out Of</label>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <div class="flex flex-col gap-1">
-                      <input type="number" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-weight" id="examWeightInput1" placeholder="0">
-                      <label for="examWeightInput1" class="text-sm font-medium text-slate-300 ml-1 mb-1" style="order: -1;">Weight (%) Optional</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="flex justify-end mt-4">
-                <button id="addExamFormBtn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800" type="button">
-                  Add
-                </button>
               </div>
             </div>
           </div>
         </div>
-    <div class="w-full lg:w-1/3 xl:w-[400px] lg:sticky lg:top-8 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 p-8 flex flex-col gap-6 order-last shrink-0"><h2 class="text-2xl font-bold text-white mb-2 pb-4 border-b border-slate-700">Actions &amp; Results</h2><div class="flex flex-col gap-4 w-full"><button id="calculateBtn" class="w-full px-6 py-4 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-xl rounded-xl shadow-lg transition-all focus:ring-4 focus:ring-blue-500 focus:outline-none text-center" type="button">
-          Calculate
-        </button><button id="clearBtn" class="w-full px-6 py-3 bg-slate-700 hover:bg-slate-600 active:bg-slate-800 text-white font-bold text-lg rounded-xl shadow transition-all focus:ring-4 focus:ring-slate-500 focus:outline-none text-center" type="button">
-          Clear
-        </button></div><div id="results" class="mt-4 text-slate-300 min-h-[300px] bg-slate-900 rounded-2xl p-6 border border-slate-700"><p class="text-slate-500 text-center mt-8">Enter your inputs on the left and click calculate to see your grade breakdown.</p></div></div></div>
-    
 
-    <div class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex justify-center items-center p-4 transition-opacity" id="appErrorModal" tabindex="-1" aria-labelledby="appErrorModalLabel" aria-hidden="true">
-      <div class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 flex flex-col max-h-[90vh]">
-        <div class="flex flex-col h-full overflow-hidden">
-          <div class="flex justify-between items-center p-5 border-b border-slate-700 shrink-0">
-            <h1 class="text-xl font-bold text-white" id="appErrorModalLabel">Error</h1>
-            <button type="button" class="text-slate-400 hover:text-white text-2xl leading-none font-bold p-1 rounded hover:bg-slate-700 transition-colors" onclick="this.closest('.fixed').classList.add('hidden')" aria-label="Close">×</button>
+        <div
+          class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 mb-6"
+        >
+          <div class="">
+            <div
+              class="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4"
+            >
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-white">
+                  Merge Components Helper (Optional)
+                </h2>
+                <button
+                  type="button"
+                  class="text-slate-400 hover:text-white w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center font-bold text-sm transition-colors"
+                  onclick="
+                    document
+                      .getElementById('mergeComponentsHelpModal')
+                      .classList.remove('hidden')
+                  "
+                  aria-label="Show merge components help"
+                >
+                  ?
+                </button>
+              </div>
+              <button
+                id="parseMergeComponentsBtn"
+                class="px-3 py-1.5 border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white text-sm font-medium rounded-md transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                type="button"
+              >
+                Paste &amp; Parse
+              </button>
+            </div>
+            <p class="text-sm text-slate-400 mb-4">
+              Use this when combining multiple LMS components (e.g. Lab,
+              Seatwork, Project) into one Assessment bucket.
+            </p>
+            <div id="mergeComponentsContainer">
+              <div class="merge-component-row row g-3 mb-3">
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all merge-component-percentage"
+                      id="mergeComponentPercentageInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="mergeComponentPercentageInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Component Percentage</label
+                    >
+                  </div>
+                </div>
+                <div
+                  class="flex flex-col gap-1 d-flex align-items-center gap-2"
+                >
+                  <div class="form-floating flex-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all merge-component-weight"
+                      id="mergeComponentWeightInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="mergeComponentWeightInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Component Weight (%)</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-4">
+              <button
+                id="addMergeComponentBtn"
+                class="px-5 py-2.5 border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800"
+                type="button"
+              >
+                Add Component
+              </button>
+              <button
+                id="applyMergedAssessmentBtn"
+                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800"
+                type="button"
+              >
+                Apply To Assessment
+              </button>
+            </div>
+            <div id="mergeHelperResult" class="small text-muted mt-2"></div>
           </div>
-          <div class="p-5 text-slate-300 space-y-4 leading-relaxed overflow-y-auto" id="appErrorModalBody"></div>
-          <div class="flex justify-end p-5 border-t border-slate-700 gap-3 shrink-0">
-            <button type="button" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-slate-400 focus:outline-none" onclick="this.closest('.fixed').classList.add('hidden')">
+        </div>
+
+        <div
+          class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6"
+        >
+          <div class="">
+            <div id="formsContainer">
+              <div
+                class="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4"
+              >
+                <h2 class="text-xl font-bold text-white">Assessment Tasks</h2>
+
+                <button
+                  id="parseAssessmentBtn"
+                  class="px-3 py-1.5 border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white text-sm font-medium rounded-md transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  type="button"
+                >
+                  Paste &amp; Parse
+                </button>
+              </div>
+              <div class="flex flex-col gap-1 mb-4">
+                <input
+                  type="number"
+                  class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  id="floatingInput"
+                  placeholder="0"
+                />
+                <label
+                  for="floatingInput"
+                  class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                  style="order: -1"
+                  >Percentage</label
+                >
+              </div>
+              <div class="assessment-row row g-3 mb-3">
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all assessment-score"
+                      id="scoreInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="scoreInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Score</label
+                    >
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all assessment-outof"
+                      id="outOfInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="outOfInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Out Of</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-end mt-4">
+              <button
+                id="addFormBtn"
+                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800"
+                type="button"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 mt-6"
+        >
+          <div class="">
+            <div id="quizFormsContainer">
+              <div
+                class="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mb-4"
+              >
+                <h2 class="text-xl font-bold text-white">Quiz</h2>
+                <button
+                  id="parseQuizBtn"
+                  class="px-3 py-1.5 border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white text-sm font-medium rounded-md transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  type="button"
+                >
+                  Paste &amp; Parse
+                </button>
+              </div>
+              <div class="flex flex-col gap-1 mb-4">
+                <input
+                  type="number"
+                  class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  id="floatingQuizInput"
+                  placeholder="0"
+                />
+                <label
+                  for="floatingQuizInput"
+                  class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                  style="order: -1"
+                  >Percentage</label
+                >
+              </div>
+              <div class="quiz-row row g-3 mb-3">
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all quiz-score"
+                      id="quizScoreInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="quizScoreInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Score</label
+                    >
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all quiz-outof"
+                      id="quizOutOfInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="quizOutOfInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Out Of</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-end mt-4">
+              <button
+                id="addQuizFormBtn"
+                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800"
+                type="button"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          class="bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 mt-6"
+        >
+          <div class="">
+            <div id="examFormsContainer">
+              <h2 class="text-xl font-bold text-white mb-4">Exam</h2>
+              <div class="row g-3 mb-3">
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <select
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      id="examInputModeSelect"
+                    >
+                      <option value="auto" selected="">
+                        Auto (Score/Out Of Rows)
+                      </option>
+                      <option value="direct">Use LMS Exam Percentage</option>
+                    </select>
+                    <label
+                      for="examInputModeSelect"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Exam Input Mode</label
+                    >
+                  </div>
+                  <div class="text-xs text-slate-400 mt-1 ml-1">
+                    Auto computes from Exam score rows. Direct uses your LMS
+                    Exam percentage.
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1 hidden" id="examDirectWrap">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      id="examDirectPercentageInput"
+                      placeholder="0"
+                    />
+                    <label
+                      for="examDirectPercentageInput"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >LMS Exam Percentage</label
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="exam-row row g-3 mb-3">
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-score"
+                      id="examScoreInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="examScoreInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Score</label
+                    >
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-outof"
+                      id="examOutOfInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="examOutOfInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Out Of</label
+                    >
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <div class="flex flex-col gap-1">
+                    <input
+                      type="number"
+                      class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all exam-weight"
+                      id="examWeightInput1"
+                      placeholder="0"
+                    />
+                    <label
+                      for="examWeightInput1"
+                      class="text-sm font-medium text-slate-300 ml-1 mb-1"
+                      style="order: -1"
+                      >Weight (%) Optional</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-end mt-4">
+              <button
+                id="addExamFormBtn"
+                class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800"
+                type="button"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="w-full lg:w-1/3 xl:w-[400px] lg:sticky lg:top-8 flex flex-col gap-6 order-last shrink-0"
+      >
+        <div
+          class="bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 p-8 flex flex-col gap-6"
+        >
+          <h2
+            class="text-2xl font-bold text-white mb-2 pb-4 border-b border-slate-700"
+          >
+            Actions &amp; Results
+          </h2>
+          <div class="flex flex-col gap-4 w-full">
+            <button
+              id="calculateBtn"
+              class="w-full px-6 py-4 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-xl rounded-xl shadow-lg transition-all focus:ring-4 focus:ring-blue-500 focus:outline-none text-center"
+              type="button"
+            >
+              Calculate</button
+            ><button
+              id="clearBtn"
+              class="w-full px-6 py-3 bg-slate-700 hover:bg-slate-600 active:bg-slate-800 text-white font-bold text-lg rounded-xl shadow transition-all focus:ring-4 focus:ring-slate-500 focus:outline-none text-center"
+              type="button"
+            >
+              Clear
+            </button>
+          </div>
+          <div
+            id="results"
+            class="mt-4 text-slate-300 min-h-[300px] bg-slate-900 rounded-2xl p-6 border border-slate-700"
+          >
+            <p class="text-slate-500 text-center mt-8">
+              Enter your inputs on the left and click calculate to see your
+              grade breakdown.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 p-8 flex flex-col gap-6"
+        >
+          <h2
+            class="text-2xl font-bold text-white mb-2 pb-4 border-b border-slate-700 flex items-center gap-2"
+          >
+            <!-- Gemini Sparkles Icon -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              class="text-blue-400"
+            >
+              <path
+                d="M16 4.382l-1.464 3.738-3.738 1.464 3.738 1.464 1.464 3.738 1.464-3.738 3.738-1.464-3.738-1.464L16 4.382zM7.5 12l-1.098 2.802-2.802 1.098 2.802 1.098 1.098 2.802 1.098-2.802 2.802-1.098-2.802-1.098L7.5 12z"
+                fill="currentColor"
+              />
+            </svg>
+            AI Summary
+          </h2>
+          <div
+            id="aiSummaryResult"
+            class="hidden mt-4 text-slate-300 min-h-[150px] bg-slate-900 rounded-2xl p-6 border border-slate-700 leading-relaxed overflow-y-auto"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex justify-center items-center p-4 transition-opacity"
+      id="appErrorModal"
+      tabindex="-1"
+      aria-labelledby="appErrorModalLabel"
+      aria-hidden="true"
+    >
+      <div
+        class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 flex flex-col max-h-[90vh]"
+      >
+        <div class="flex flex-col h-full overflow-hidden">
+          <div
+            class="flex justify-between items-center p-5 border-b border-slate-700 shrink-0"
+          >
+            <h1 class="text-xl font-bold text-white" id="appErrorModalLabel">
+              Error
+            </h1>
+            <button
+              type="button"
+              class="text-slate-400 hover:text-white text-2xl leading-none font-bold p-1 rounded hover:bg-slate-700 transition-colors"
+              onclick="this.closest('.fixed').classList.add('hidden')"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          </div>
+          <div
+            class="p-5 text-slate-300 space-y-4 leading-relaxed overflow-y-auto"
+            id="appErrorModalBody"
+          ></div>
+          <div
+            class="flex justify-end p-5 border-t border-slate-700 gap-3 shrink-0"
+          >
+            <button
+              type="button"
+              class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-slate-400 focus:outline-none"
+              onclick="this.closest('.fixed').classList.add('hidden')"
+            >
               Close
             </button>
           </div>
@@ -256,33 +586,69 @@
       </div>
     </div>
 
-    <div class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex justify-center items-center p-4 transition-opacity" id="mergeComponentsHelpModal" tabindex="-1" aria-labelledby="mergeComponentsHelpModalLabel" aria-hidden="true">
-      <div class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 flex flex-col max-h-[90vh]">
+    <div
+      class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex justify-center items-center p-4 transition-opacity"
+      id="mergeComponentsHelpModal"
+      tabindex="-1"
+      aria-labelledby="mergeComponentsHelpModalLabel"
+      aria-hidden="true"
+    >
+      <div
+        class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 flex flex-col max-h-[90vh]"
+      >
         <div class="flex flex-col h-full overflow-hidden">
-          <div class="flex justify-between items-center p-5 border-b border-slate-700 shrink-0">
-            <h1 class="text-xl font-bold text-white" id="mergeComponentsHelpModalLabel">
+          <div
+            class="flex justify-between items-center p-5 border-b border-slate-700 shrink-0"
+          >
+            <h1
+              class="text-xl font-bold text-white"
+              id="mergeComponentsHelpModalLabel"
+            >
               Merge Components Help
             </h1>
-            <button type="button" class="text-slate-400 hover:text-white text-2xl leading-none font-bold p-1 rounded hover:bg-slate-700 transition-colors" onclick="this.closest('.fixed').classList.add('hidden')" aria-label="Close">×</button>
+            <button
+              type="button"
+              class="text-slate-400 hover:text-white text-2xl leading-none font-bold p-1 rounded hover:bg-slate-700 transition-colors"
+              onclick="this.closest('.fixed').classList.add('hidden')"
+              aria-label="Close"
+            >
+              ×
+            </button>
           </div>
-          <div class="p-5 text-slate-300 space-y-4 leading-relaxed overflow-y-auto">
+          <div
+            class="p-5 text-slate-300 space-y-4 leading-relaxed overflow-y-auto"
+          >
             If your course has multiple components that are merged into one
             grade (e.g. Lab, Seatwork, Project all merged into one Assessment
             grade), you can use this helper to calculate the combined percentage
             for that grade.
-            <br>
-            <br>
+            <br />
+            <br />
             Note that the component weight is the percentage contribution, and
             the component percentage is the overrall percentage you got for that
             component. For example, if your Lab grade contributes 35% to your
             overall Assessment grade, and you got an 90% for Lab, you would put
-            35 for the weight and 90 for the percentage.<br>
-            <img src="assets/img/percentage_1.png" alt="Example of using the merge components helper" class="img-fluid rounded my-3">
-            <img src="assets/img/percentage_2.png" alt="Example of using the merge components helper" class="img-fluid rounded my-3">
-            <br>
+            35 for the weight and 90 for the percentage.<br />
+            <img
+              src="assets/img/percentage_1.png"
+              alt="Example of using the merge components helper"
+              class="img-fluid rounded my-3"
+            />
+            <img
+              src="assets/img/percentage_2.png"
+              alt="Example of using the merge components helper"
+              class="img-fluid rounded my-3"
+            />
+            <br />
           </div>
-          <div class="flex justify-end p-5 border-t border-slate-700 gap-3 shrink-0">
-            <button type="button" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-slate-400 focus:outline-none" onclick="this.closest('.fixed').classList.add('hidden')">
+          <div
+            class="flex justify-end p-5 border-t border-slate-700 gap-3 shrink-0"
+          >
+            <button
+              type="button"
+              class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-slate-400 focus:outline-none"
+              onclick="this.closest('.fixed').classList.add('hidden')"
+            >
               Close
             </button>
           </div>
@@ -290,31 +656,76 @@
       </div>
     </div>
 
-    <div class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex justify-center items-center p-4 transition-opacity" id="parseRowsModal" tabindex="-1" aria-labelledby="parseRowsModalLabel" aria-hidden="true">
-      <div class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 flex flex-col max-h-[90vh]">
+    <div
+      class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex justify-center items-center p-4 transition-opacity"
+      id="parseRowsModal"
+      tabindex="-1"
+      aria-labelledby="parseRowsModalLabel"
+      aria-hidden="true"
+    >
+      <div
+        class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 flex flex-col max-h-[90vh]"
+      >
         <div class="flex flex-col h-full overflow-hidden">
-          <div class="flex justify-between items-center p-5 border-b border-slate-700 shrink-0">
+          <div
+            class="flex justify-between items-center p-5 border-b border-slate-700 shrink-0"
+          >
             <h1 class="text-xl font-bold text-white" id="parseRowsModalLabel">
               Paste Rows To Parse
             </h1>
-            <button type="button" class="text-slate-400 hover:text-white text-2xl leading-none font-bold p-1 rounded hover:bg-slate-700 transition-colors" onclick="this.closest('.fixed').classList.add('hidden')" aria-label="Close">×</button>
+            <button
+              type="button"
+              class="text-slate-400 hover:text-white text-2xl leading-none font-bold p-1 rounded hover:bg-slate-700 transition-colors"
+              onclick="this.closest('.fixed').classList.add('hidden')"
+              aria-label="Close"
+            >
+              ×
+            </button>
           </div>
-          <div class="p-5 text-slate-300 space-y-4 leading-relaxed overflow-y-auto">
+          <div
+            class="p-5 text-slate-300 space-y-4 leading-relaxed overflow-y-auto"
+          >
             <p class="mb-2" id="parseRowsModalHelp">
-              <span id="parseRowsModalHelpText">Paste copied table rows here. We will extract No. of Items and
+              <span id="parseRowsModalHelpText"
+                >Paste copied table rows here. We will extract No. of Items and
                 Raw Score. Note that the pasted text should only contain the
-                rows of the table, not the headers.</span>
-              <button type="button" class="btn btn-link p-0 align-baseline ms-1" onclick="document.getElementById('parseTooltipImageModal').classList.remove('hidden')" aria-label="Show parse guide image">
+                rows of the table, not the headers.</span
+              >
+              <button
+                type="button"
+                class="btn btn-link p-0 align-baseline ms-1"
+                onclick="
+                  document
+                    .getElementById('parseTooltipImageModal')
+                    .classList.remove('hidden')
+                "
+                aria-label="Show parse guide image"
+              >
                 ?
               </button>
             </p>
-            <textarea id="parseRowsTextInput" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" rows="10" placeholder="Paste your copied table text here..."></textarea>
+            <textarea
+              id="parseRowsTextInput"
+              class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              rows="10"
+              placeholder="Paste your copied table text here..."
+            ></textarea>
           </div>
-          <div class="flex justify-end p-5 border-t border-slate-700 gap-3 shrink-0">
-            <button type="button" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-slate-400 focus:outline-none" onclick="this.closest('.fixed').classList.add('hidden')">
+          <div
+            class="flex justify-end p-5 border-t border-slate-700 gap-3 shrink-0"
+          >
+            <button
+              type="button"
+              class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-slate-400 focus:outline-none"
+              onclick="this.closest('.fixed').classList.add('hidden')"
+            >
               Cancel
             </button>
-            <button type="button" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800" id="parseRowsSubmitBtn">
+            <button
+              type="button"
+              class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-2 focus:ring-offset-slate-800"
+              id="parseRowsSubmitBtn"
+            >
               Parse
             </button>
           </div>
@@ -322,34 +733,42 @@
       </div>
     </div>
 
-    <div class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex justify-center items-center p-4 transition-opacity" id="parseTooltipImageModal" tabindex="-1" aria-labelledby="parseTooltipImageModalLabel" aria-hidden="true">
-      <div class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 flex flex-col max-h-[90vh]">
+    <div
+      class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex justify-center items-center p-4 transition-opacity"
+      id="parseTooltipImageModal"
+      tabindex="-1"
+      aria-labelledby="parseTooltipImageModalLabel"
+      aria-hidden="true"
+    >
+      <div
+        class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700 flex flex-col max-h-[90vh]"
+      >
         <div class="flex flex-col h-full overflow-hidden">
-          <div class="flex justify-between items-center p-5 border-b border-slate-700 shrink-0">
-            <h1 class="text-xl font-bold text-white" id="parseTooltipImageModalLabel">
+          <div
+            class="flex justify-between items-center p-5 border-b border-slate-700 shrink-0"
+          >
+            <h1
+              class="text-xl font-bold text-white"
+              id="parseTooltipImageModalLabel"
+            >
               Parse Guide
             </h1>
 
-            <button type="button" class="text-slate-400 hover:text-white text-2xl leading-none font-bold p-1 rounded hover:bg-slate-700 transition-colors" onclick="this.closest('.fixed').classList.add('hidden')" aria-label="Close">×</button>
+            <button
+              type="button"
+              class="text-slate-400 hover:text-white text-2xl leading-none font-bold p-1 rounded hover:bg-slate-700 transition-colors"
+              onclick="this.closest('.fixed').classList.add('hidden')"
+              aria-label="Close"
+            >
+              ×
+            </button>
           </div>
-          <div class="p-5 text-slate-300 space-y-4 leading-relaxed overflow-y-auto">
+          <div
+            class="p-5 text-slate-300 space-y-4 leading-relaxed overflow-y-auto"
+          >
             <h6>
               Only copy the data rows, not including the header. Additionally,
               should you only copy a particular part (e.g. assessment task) for
-              it to add all the entries for a particular activity (e.g.
-              assessment)
-            </h6>
-            <img src="assets/img/tooltip.png" alt="Guide showing which table rows to copy for parsing" class="img-fluid rounded" style="max-height: 80vh; width: auto">
-          </div>
-        </div>
-      </div>
-    </div>
-  
-  
-  
-  <script src="assets/js/script.js"></script>
-
-</body></html>         should you only copy a particular part (e.g. assessment task) for
               it to add all the entries for a particular activity (e.g.
               assessment)
             </h6>
@@ -363,10 +782,7 @@
         </div>
       </div>
     </div>
+    <br />
+    <script src="assets/js/script.js"></script>
   </body>
-  
-  
-  <script src="assets/js/script.js"></script>
-
-  
 </html>

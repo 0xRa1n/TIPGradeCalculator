@@ -5,6 +5,59 @@ let formCount = 1,
   mergeComponentFormCount = 1;
 let parseTargetSection = "assessment";
 
+// --- AI Summary State ---
+let lastCalculatedInputsRaw = null;
+let currentSummary = "";
+
+const generateAISummary = async (stats) => {
+  const resultDiv = $("aiSummaryResult");
+  if (!resultDiv) return;
+
+  // Gather raw scores from the DOM
+  const getScores = (rowSel, scoreSel, outOfSel) => {
+    return Array.from(document.querySelectorAll(rowSel))
+      .map((r) => {
+        const s = r.querySelector(scoreSel)?.value;
+        const o = r.querySelector(outOfSel)?.value;
+        return s && o ? `${s}/${o}` : null;
+      })
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  const assessScores =
+    getScores(".assessment-row", ".assessment-score", ".assessment-outof") ||
+    "N/A";
+  const quizScores =
+    getScores(".quiz-row", ".quiz-score", ".quiz-outof") || "N/A";
+  const examScores =
+    getScores(".exam-row", ".exam-score", ".exam-outof") || "N/A";
+
+  resultDiv.innerHTML = `<div class="flex items-center gap-2"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-slate-400">Generating AI Summary with Gemini...</p></div>`;
+  resultDiv.classList.remove("hidden");
+
+  try {
+    const response = await fetch("/api/summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stats, assessScores, quizScores, examScores }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.summary || "No summary generated.";
+    currentSummary = text;
+    resultDiv.innerHTML = `<p class="whitespace-pre-wrap">${text}</p>`;
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    resultDiv.innerHTML = `<p class="text-red-400">Failed to generate summary: ${error.message}</p>`;
+  }
+};
+
 const showErrorModal = (title, content) => {
   if (
     !$("appErrorModal") ||
@@ -666,6 +719,30 @@ const calcAll = () => {
   card.innerHTML = `<div class="card-body">${classStandingText}${previousGrade === null ? "" : `<br>Using ${selectedPeriod === "midterm" ? "Prelim" : "Midterm"} grade <strong>${fmt2(previousGrade)}%</strong> your computed <b>${termLabels[selectedPeriod].toUpperCase()}</b> grade is <strong>${fmt2(computedGrade)}%</strong>.`}${previousGrade === null ? `<br>Your final grade for <b>PRELIM</b> is <strong>${fmt2(computedGrade)}%</strong>.` : ""}<br>Equivalent grade: <strong>${equivalentGrade}</strong>.</div>`;
 
   $("results").replaceChildren(card);
+
+  // Trigger AI Summary if inputs have changed
+  const inputHashStr = JSON.stringify({
+    selectedPeriod,
+    classStandingMode,
+    directClassStandingInput,
+    examPercentage,
+    assessPartial: assess?.partial || 0,
+    quizPartial: quiz?.partial || 0,
+    prevInput: $("previousGradeInput")?.value.trim(),
+  });
+
+  if (lastCalculatedInputsRaw !== inputHashStr) {
+    lastCalculatedInputsRaw = inputHashStr;
+
+    generateAISummary({
+      classStanding: fmt2(classStanding),
+      assessment: fmt2(assess?.partial || 0),
+      quiz: fmt2(quiz?.partial || 0),
+      exam: fmt2(examPercentage),
+      computedGrade: fmt2(computedGrade),
+      equivalentGrade,
+    });
+  }
 };
 
 const clearAll = () => {
@@ -702,6 +779,16 @@ const clearAll = () => {
   if ($("mergeHelperResult")) $("mergeHelperResult").textContent = "";
 
   $("results")?.replaceChildren();
+
+  // Clear AI Summary state
+  lastCalculatedInputsRaw = null;
+  currentSummary = "";
+  const aiResultDiv = $("aiSummaryResult");
+  if (aiResultDiv) {
+    aiResultDiv.innerHTML = "";
+    aiResultDiv.classList.add("hidden");
+  }
+
   updatePreviousGradeUI();
 };
 
